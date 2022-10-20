@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "BinkioApp",
-    "slug": "BinkioApp",
+    "name": "binkioapp",
+    "slug": "binkioapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
