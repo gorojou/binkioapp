@@ -1,7 +1,16 @@
 import { View, StyleSheet, TextInput } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import RText from "../RText";
+import Loader from "../Loader";
 export default function Login({ navigation }) {
+  const [loading, setLoading] = useState(false);
+  const login = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      navigation.navigate("dash");
+    }, 5000);
+  };
   return (
     <View style={styles.formulario}>
       <>
@@ -17,9 +26,10 @@ export default function Login({ navigation }) {
         <View style={styles.intputContainer}>
           <TextInput style={styles.input} placeholder="Contraseña" />
         </View>
-        <MainButton width={1} callback={() => navigation.navigate("dash")}>
+        <MainButton width={1} callback={() => login()}>
           Ingresa
         </MainButton>
+        {loading && <Loader size={100} />}
       </>
     </View>
   );

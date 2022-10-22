@@ -5,9 +5,17 @@ import MainButton from "../buttons";
 import { StyleSheet } from "react-native";
 import Person from "../../assets/svg/person.svg";
 import Store from "../../assets/svg/store.svg";
+import Loader from "../Loader";
 export default function Register({ navigation }) {
   const [section, setSection] = useState(false);
-
+  const [loading, setLoading] = useState(false);
+  const register = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setSection(true);
+    }, 3000);
+  };
   return (
     <View style={styles.formulario}>
       {section ? (
@@ -32,9 +40,10 @@ export default function Register({ navigation }) {
           <View style={styles.intputContainer}>
             <TextInput style={styles.input} placeholder="Contraseña" />
           </View>
-          <MainButton width={1} callback={() => setSection(true)}>
+          <MainButton width={1} callback={() => register()}>
             Registrate
           </MainButton>
+          {loading && <Loader size={100} />}
         </>
       )}
     </View>
@@ -43,6 +52,14 @@ export default function Register({ navigation }) {
 
 const SelectType = ({ navigation }) => {
   const [type, setType] = useState("");
+  const [loading, setLoading] = useState(false);
+  const register = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      navigation.navigate("dash");
+    }, 3000);
+  };
   return (
     <>
       <RText style={styles.formTitle} tipo={"bold"}>
@@ -87,9 +104,10 @@ const SelectType = ({ navigation }) => {
           </RText>
         </TouchableOpacity>
       </View>
-      <MainButton width={1} callback={() => navigation.navigate("dash")}>
+      <MainButton width={1} callback={() => register()}>
         Registrarme
       </MainButton>
+      {loading && <Loader size={100} />}
     </>
   );
 };
