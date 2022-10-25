@@ -2,7 +2,7 @@ import { View, Image, StyleSheet } from "react-native";
 import React from "react";
 import RText from "../RText";
 import Navbar from "./Navbar";
-export default function Dashboard() {
+export default function Dashboard({ navigation }) {
   return (
     <>
       <View style={styles.header}>
@@ -12,7 +12,7 @@ export default function Dashboard() {
         />
         <RText style={styles.nombre}>Username</RText>
       </View>
-      <Navbar />
+      <Navbar navigation={navigation} />
     </>
   );
 }
