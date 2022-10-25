@@ -23,4 +23,7 @@ module.exports = StyleSheet.create({
     borderRadius: 40,
     marginTop: 20,
   },
+  errText: {
+    color: "red",
+  },
 });

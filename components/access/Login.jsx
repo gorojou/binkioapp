@@ -2,15 +2,25 @@ import { View, StyleSheet, TextInput } from "react-native";
 import React, { useState } from "react";
 import RText from "../RText";
 import Loader from "../Loader";
+import s from "../styles";
 export default function Login({ navigation }) {
   const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
   const login = () => {
+    if (!form.email || !form.pass)
+      return setErr("Por favor no dejes ningun campo vacio");
+    if (!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/.test(form.email))
+      return setErr("Email invalido");
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
       navigation.navigate("dash");
     }, 5000);
   };
+  const [form, setForm] = useState({
+    email: "",
+    pass: "",
+  });
   return (
     <View style={styles.formulario}>
       <>
@@ -20,11 +30,32 @@ export default function Login({ navigation }) {
         <RText style={styles.sessionTitle} tipo={"thin"}>
           !Hola nuevamente!
         </RText>
+        {err && <RText style={s.errText}>{err}</RText>}
+
         <View style={styles.intputContainer}>
-          <TextInput style={styles.input} placeholder="Correo" />
+          <TextInput
+            style={styles.input}
+            placeholder="Correo"
+            value={form.email}
+            onChangeText={(value) =>
+              setForm((prev) => {
+                return { ...prev, email: value };
+              })
+            }
+          />
         </View>
         <View style={styles.intputContainer}>
-          <TextInput style={styles.input} placeholder="Contraseña" />
+          <TextInput
+            style={styles.input}
+            placeholder="Contraseña"
+            value={form.pass}
+            secureTextEntry={true}
+            onChangeText={(value) =>
+              setForm((prev) => {
+                return { ...prev, pass: value };
+              })
+            }
+          />
         </View>
         <MainButton width={1} callback={() => login()}>
           Ingresa
