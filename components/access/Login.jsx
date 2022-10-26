@@ -7,6 +7,7 @@ export default function Login({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const login = () => {
+    setErr("");
     if (!form.email || !form.pass)
       return setErr("Por favor no dejes ningun campo vacio");
     if (!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/.test(form.email))
