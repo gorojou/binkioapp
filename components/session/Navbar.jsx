@@ -1,28 +1,40 @@
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Image } from "react-native";
 import React, { useState } from "react";
 import RText from "../RText";
 import Home from "../../assets/svg/home.svg";
 import Settings from "../../assets/svg/settings.svg";
 import Wallet from "../../assets/svg/wallet.svg";
+import useAuth from "../../context/AuthContext";
+import PfpImage from "./PfpImage";
 export default function Navbar({ navigation }) {
   const [configBox, setConfigBox] = useState(false);
+  const { currentUser } = useAuth();
   return (
     <View style={styles.navbar}>
+      <TouchableOpacity onPress={() => navigation.navigate("dash")}>
+        <Home width={40} height={40} fill={"white"} />
+      </TouchableOpacity>
       <Wallet width={40} height={40} fill={"white"} />
-      <Home width={40} height={40} fill={"white"} />
-
       <TouchableOpacity onPress={() => setConfigBox(!configBox)}>
         <Settings width={40} height={40} fill={"white"} />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate("profile")}>
+        <PfpImage size={30} />
       </TouchableOpacity>
       {configBox && <ConfigMenu navigation={navigation} />}
     </View>
   );
 }
-const ConfigMenu = ({ navigation }) => {
+const ConfigMenu = () => {
+  const { logOut } = useAuth();
   return (
     <>
       <View style={styles.configBox}>
-        <TouchableOpacity onPress={() => navigation.navigate("Home")}>
+        <TouchableOpacity
+          onPress={async () => {
+            await logOut();
+          }}
+        >
           <RText>Cerrar Sesión</RText>
         </TouchableOpacity>
       </View>
@@ -38,7 +50,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-evenly",
     alignItems: "center",
-    backgroundColor: "#36287d",
+    backgroundColor: "black",
   },
   configBox: {
     position: "absolute",

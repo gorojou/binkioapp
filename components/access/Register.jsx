@@ -1,14 +1,13 @@
 import { View, TextInput, TouchableOpacity } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import RText from "../RText";
 import MainButton from "../buttons";
 import { StyleSheet } from "react-native";
-import Person from "../../assets/svg/person.svg";
-import Store from "../../assets/svg/store.svg";
 import Loader from "../Loader";
 import s from "../styles";
+import useAuth from "../../context/AuthContext";
 export default function Register({ navigation }) {
-  const [section, setSection] = useState(false);
+  const { signUp } = useAuth();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [form, setForm] = useState({
@@ -20,7 +19,7 @@ export default function Register({ navigation }) {
     telefono: "",
     pass: "",
   });
-  const register = () => {
+  const register = async () => {
     setErr("");
     if (
       !form.email ||
@@ -38,185 +37,130 @@ export default function Register({ navigation }) {
       return setErr("La contraseña debe tener un minimo de 6 caracteres");
 
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await signUp(
+        form.email,
+        form.pass,
+        form.telefono,
+        form.nombre,
+        form.dia,
+        form.mes,
+        form.year
+      );
       setLoading(false);
-      setSection(true);
-    }, 3000);
+    } catch (err) {
+      setLoading(false);
+      setErr(err.message);
+    }
   };
   return (
     <View style={styles.formulario}>
-      {section ? (
-        <SelectType navigation={navigation} />
-      ) : (
-        <>
-          <RText style={styles.formTitle} tipo={"bold"}>
-            Registrate
-          </RText>
-          <RText style={styles.sessionTitle} tipo={"thin"}>
-            !Se parte de la comunidad Binkio!
-          </RText>
-          {err && <RText style={s.errText}>{err}</RText>}
-          <View style={styles.intputContainer}>
-            <TextInput
-              style={styles.input}
-              value={form.nombre}
-              onChangeText={(value) =>
-                setForm((prev) => {
-                  return { ...prev, nombre: value };
-                })
-              }
-              placeholder="Nombre"
-            />
-          </View>
-          <RText>Fecha de nacimiento</RText>
-          <View style={styles.nacimientoInput}>
-            <TextInput
-              style={{ ...styles.input, ...styles.inputFecha }}
-              placeholder="DD"
-              keyboardType="numeric"
-              value={form.dia}
-              onChangeText={(value) =>
-                setForm((prev) => {
-                  if (value.length > 2 || value.length < 0) return prev;
-                  if (value > 31) return "00";
-                  return { ...prev, dia: value };
-                })
-              }
-            />
-            <TextInput
-              style={{ ...styles.input, ...styles.inputFecha }}
-              placeholder="MM"
-              keyboardType="numeric"
-              value={form.mes}
-              onChangeText={(value) =>
-                setForm((prev) => {
-                  if (value.length > 2 || value.length < 0) return prev;
-                  if (value > 12) return "00";
-                  return { ...prev, mes: value };
-                })
-              }
-            />
-            <TextInput
-              style={{ ...styles.input, ...styles.inputFecha }}
-              placeholder="AA"
-              keyboardType="numeric"
-              value={form.year}
-              onChangeText={(value) =>
-                setForm((prev) => {
-                  if (value.length > 2 || value.length < 0) return prev;
-                  return { ...prev, year: value };
-                })
-              }
-            />
-          </View>
-          <View style={styles.intputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Correo"
-              value={form.email}
-              onChangeText={(value) =>
-                setForm((prev) => {
-                  return { ...prev, email: value };
-                })
-              }
-            />
-          </View>
-          <View style={styles.intputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Telefono"
-              value={form.telefono}
-              onChangeText={(value) =>
-                setForm((prev) => {
-                  return { ...prev, telefono: value };
-                })
-              }
-            />
-          </View>
-          <View style={styles.intputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Contraseña"
-              value={form.pass}
-              secureTextEntry={true}
-              onChangeText={(value) =>
-                setForm((prev) => {
-                  return { ...prev, pass: value };
-                })
-              }
-            />
-          </View>
-          <MainButton width={1} callback={() => register()}>
-            Registrate
-          </MainButton>
-          {loading && <Loader size={100} />}
-        </>
-      )}
+      <>
+        <RText style={styles.formTitle} tipo={"bold"}>
+          Registrate
+        </RText>
+        <RText style={styles.sessionTitle} tipo={"thin"}>
+          !Se parte de la comunidad Binkio!
+        </RText>
+        {err && <RText style={s.errText}>{err}</RText>}
+        <View style={styles.intputContainer}>
+          <TextInput
+            style={styles.input}
+            value={form.nombre}
+            onChangeText={(value) =>
+              setForm((prev) => {
+                return { ...prev, nombre: value };
+              })
+            }
+            placeholder="Nombre"
+          />
+        </View>
+        <RText>Fecha de nacimiento</RText>
+        <View style={styles.nacimientoInput}>
+          <TextInput
+            style={{ ...styles.input, ...styles.inputFecha }}
+            placeholder="DD"
+            keyboardType="numeric"
+            value={form.dia}
+            onChangeText={(value) =>
+              setForm((prev) => {
+                if (value.length > 2 || value.length < 0) return { ...prev };
+                if (value > 31) return "00";
+                return { ...prev, dia: value };
+              })
+            }
+          />
+          <TextInput
+            style={{ ...styles.input, ...styles.inputFecha }}
+            placeholder="MM"
+            keyboardType="numeric"
+            value={form.mes}
+            onChangeText={(value) =>
+              setForm((prev) => {
+                if (value.length > 2 || value.length < 0) return { ...prev };
+                if (value > 12) return "00";
+                return { ...prev, mes: value };
+              })
+            }
+          />
+          <TextInput
+            style={{ ...styles.input, ...styles.inputFecha }}
+            placeholder="AA"
+            keyboardType="numeric"
+            value={form.year}
+            onChangeText={(value) =>
+              setForm((prev) => {
+                if (value.length > 4 || value.length < 0) return { ...prev };
+                return { ...prev, year: value };
+              })
+            }
+          />
+        </View>
+        <View style={styles.intputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Correo"
+            value={form.email}
+            onChangeText={(value) =>
+              setForm((prev) => {
+                return { ...prev, email: value };
+              })
+            }
+          />
+        </View>
+        <View style={styles.intputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Telefono"
+            value={form.telefono}
+            onChangeText={(value) =>
+              setForm((prev) => {
+                return { ...prev, telefono: value };
+              })
+            }
+          />
+        </View>
+        <View style={styles.intputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Contraseña"
+            value={form.pass}
+            secureTextEntry={true}
+            onChangeText={(value) =>
+              setForm((prev) => {
+                return { ...prev, pass: value };
+              })
+            }
+          />
+        </View>
+        <MainButton width={1} callback={() => register()}>
+          Registrate
+        </MainButton>
+        {loading && <Loader size={100} />}
+      </>
     </View>
   );
 }
-
-const SelectType = ({ navigation }) => {
-  const [type, setType] = useState("");
-  const [loading, setLoading] = useState(false);
-  const register = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      navigation.navigate("dash");
-    }, 3000);
-  };
-  return (
-    <>
-      <RText style={styles.formTitle} tipo={"bold"}>
-        Ya casi
-      </RText>
-      <RText style={styles.sessionTitle} tipo={"thin"}>
-        !Selecciona la opcion acorde a ti!
-      </RText>
-      <View style={styles.selectionView}>
-        <TouchableOpacity
-          style={
-            type === "negocio"
-              ? styles.optionSelected
-              : styles.optionNotSelected
-          }
-          onPress={() => setType("negocio")}
-        >
-          <Store
-            height={50}
-            width={50}
-            fill={type == "negocio" ? "#f40038" : "black"}
-          />
-          <RText style={{ color: type === "negocio" ? "#f40038" : "black" }}>
-            Negocio
-          </RText>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={
-            type === "cliente"
-              ? styles.optionSelected
-              : styles.optionNotSelected
-          }
-          onPress={() => setType("cliente")}
-        >
-          <Person
-            height={50}
-            width={50}
-            fill={type == "cliente" ? "#f40038" : "black"}
-          />
-          <RText style={{ color: type == "cliente" ? "#f40038" : "black" }}>
-            Cliente
-          </RText>
-        </TouchableOpacity>
-      </View>
-      <MainButton width={1} callback={() => register()}>
-        Registrarme
-      </MainButton>
-      {loading && <Loader size={100} />}
-    </>
-  );
-};
 
 const styles = StyleSheet.create({
   formulario: {

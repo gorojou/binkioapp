@@ -1,15 +1,18 @@
 import { StyleSheet, Text, View, SafeAreaView, StatusBar } from "react-native";
 import Initial from "./navigation/Initial";
 import TitleLogo from "./components/TitleLogo";
+import { AuthProvider } from "./context/AuthContext";
 export default function App() {
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: "white", ...styles.container }}
     >
-      <View style={styles.titleContainer}>
-        <TitleLogo />
-      </View>
-      <Initial />
+      <AuthProvider>
+        <View style={styles.titleContainer}>
+          <TitleLogo />
+        </View>
+        <Initial />
+      </AuthProvider>
     </SafeAreaView>
   );
 }

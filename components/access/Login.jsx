@@ -1,22 +1,30 @@
-import { View, StyleSheet, TextInput } from "react-native";
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  KeyboardAvoidingView,
+} from "react-native";
 import React, { useState } from "react";
 import RText from "../RText";
 import Loader from "../Loader";
 import s from "../styles";
+import useAuth from "../../context/AuthContext";
 export default function Login({ navigation }) {
+  const { logIn } = useAuth();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const login = () => {
+  const login = async () => {
     setErr("");
     if (!form.email || !form.pass)
       return setErr("Por favor no dejes ningun campo vacio");
     if (!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/.test(form.email))
       return setErr("Email invalido");
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      navigation.navigate("dash");
-    }, 5000);
+    try {
+      await logIn(form.email, form.pass);
+    } catch (err) {
+      setErr(err.message);
+    }
   };
   const [form, setForm] = useState({
     email: "",
@@ -24,15 +32,14 @@ export default function Login({ navigation }) {
   });
   return (
     <View style={styles.formulario}>
-      <>
-        <RText style={styles.formTitle} tipo={"bold"}>
-          Ingresa
-        </RText>
-        <RText style={styles.sessionTitle} tipo={"thin"}>
-          !Hola nuevamente!
-        </RText>
-        {err && <RText style={s.errText}>{err}</RText>}
-
+      <RText style={styles.formTitle} tipo={"bold"}>
+        Ingresa
+      </RText>
+      <RText style={styles.sessionTitle} tipo={"thin"}>
+        !Hola nuevamente!
+      </RText>
+      {err && <RText style={s.errText}>{err}</RText>}
+      <KeyboardAvoidingView>
         <View style={styles.intputContainer}>
           <TextInput
             style={styles.input}
@@ -62,7 +69,7 @@ export default function Login({ navigation }) {
           Ingresa
         </MainButton>
         {loading && <Loader size={100} />}
-      </>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -77,6 +84,7 @@ const styles = StyleSheet.create({
   intputContainer: {
     flexDirection: "row",
     marginVertical: 10,
+    width: "100%",
   },
   input: {
     backgroundColor: "#f3f3f3",
