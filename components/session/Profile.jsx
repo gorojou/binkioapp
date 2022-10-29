@@ -4,13 +4,14 @@ import RText from "../RText";
 import Navbar from "./Navbar";
 import useAuth from "../../context/AuthContext";
 import * as ImagePicker from "expo-image-picker";
-import MainButton from "../buttons";
+import MainButton, { SecondaryButton } from "../buttons";
 import firebase, { storage, firestore } from "../../firebase";
 import Loader from "../Loader";
 export default function Profile({ navigation }) {
   const { currentUser, uploadPfp, updateProfile } = useAuth();
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { logOut } = useAuth();
   async function uploadImageAsync() {
     setLoading(true);
     const blob = await new Promise((resolve, reject) => {
@@ -95,6 +96,7 @@ export default function Profile({ navigation }) {
             {currentUser.nacimiento.a}
           </RText>
         </View>
+        <SecondaryButton callback={logOut}>Cerrar sesión</SecondaryButton>
       </View>
       <Navbar navigation={navigation} />
       {loading && (

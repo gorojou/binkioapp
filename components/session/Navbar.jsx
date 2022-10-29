@@ -12,12 +12,10 @@ export default function Navbar({ navigation }) {
   return (
     <View style={styles.navbar}>
       <TouchableOpacity onPress={() => navigation.navigate("dash")}>
-        <Home width={40} height={40} fill={"white"} />
+        <Home width={40} height={40} fill={"black"} />
       </TouchableOpacity>
-      <Wallet width={40} height={40} fill={"white"} />
-      <TouchableOpacity onPress={() => setConfigBox(!configBox)}>
-        <Settings width={40} height={40} fill={"white"} />
-      </TouchableOpacity>
+      <Wallet width={40} height={40} fill={"black"} />
+      <Settings width={40} height={40} fill={"black"} />
       <TouchableOpacity onPress={() => navigation.navigate("profile")}>
         <PfpImage size={30} />
       </TouchableOpacity>
@@ -48,9 +46,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     flexDirection: "row",
+    borderStyle: "solid",
+    borderWidth: 1,
+    borderColor: "black",
     justifyContent: "space-evenly",
     alignItems: "center",
-    backgroundColor: "black",
+    borderTopRightRadius: 10,
+    borderTopLeftRadius: 10,
   },
   configBox: {
     position: "absolute",

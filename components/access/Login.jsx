@@ -24,6 +24,7 @@ export default function Login({ navigation }) {
       await logIn(form.email, form.pass);
     } catch (err) {
       setErr(err.message);
+      setLoading(false);
     }
   };
   const [form, setForm] = useState({

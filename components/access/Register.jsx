@@ -85,7 +85,7 @@ export default function Register({ navigation }) {
             onChangeText={(value) =>
               setForm((prev) => {
                 if (value.length > 2 || value.length < 0) return { ...prev };
-                if (value > 31) return "00";
+                if (value > 31) return { ...prev, dia: "01" };
                 return { ...prev, dia: value };
               })
             }
@@ -98,14 +98,14 @@ export default function Register({ navigation }) {
             onChangeText={(value) =>
               setForm((prev) => {
                 if (value.length > 2 || value.length < 0) return { ...prev };
-                if (value > 12) return "00";
+                if (value > 12) return { ...prev, mes: "01" };
                 return { ...prev, mes: value };
               })
             }
           />
           <TextInput
             style={{ ...styles.input, ...styles.inputFecha }}
-            placeholder="AA"
+            placeholder="AAAA"
             keyboardType="numeric"
             value={form.year}
             onChangeText={(value) =>
@@ -132,6 +132,7 @@ export default function Register({ navigation }) {
           <TextInput
             style={styles.input}
             placeholder="Telefono"
+            keyboardType="numeric"
             value={form.telefono}
             onChangeText={(value) =>
               setForm((prev) => {
