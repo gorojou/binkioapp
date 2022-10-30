@@ -7,6 +7,7 @@ import Dashboard from "../components/session/Dashboard";
 import useAuth from "../context/AuthContext";
 import SelectType from "../components/session/SelectType";
 import Navbar from "../components/session/Navbar";
+import Wallet from "../components/session/Wallet";
 import Profile from "../components/session/Profile";
 import FTXProvider from "../context/FTXContext";
 const Stack = createNativeStackNavigator();
@@ -30,6 +31,7 @@ const MyStack = () => {
                 <>
                   <Stack.Screen name="dash" component={Dashboard} />
                   <Stack.Screen name="profile" component={Profile} />
+                  <Stack.Screen name="wallet" component={Wallet} />
                 </>
               ) : (
                 <Stack.Screen name="selectType" component={SelectType} />

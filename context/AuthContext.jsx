@@ -21,6 +21,19 @@ export function AuthProvider({ children, navigation }) {
       throw err;
     }
   };
+  const createWallet = async (wallet) => {
+    await firestore
+      .collection("users")
+      .doc(currentUser.user.uid)
+      .update({
+        wallet: {
+          publicKey: wallet.address,
+          privKey: wallet.privateKey,
+          mnemonic: wallet.mnemonic,
+        },
+      });
+    await updateProfile();
+  };
   const updateProfile = async () => {
     setLoading(true);
     try {
@@ -94,7 +107,8 @@ export function AuthProvider({ children, navigation }) {
           setCurrentUser({ user: user, ...userDoc.data() });
           setLoading(false);
         } catch (err) {
-          Alert("Algo salio mal");
+          logOut();
+          Alert.alert("Algo salio mal");
         }
       } else {
         setCurrentUser(user);
@@ -112,6 +126,7 @@ export function AuthProvider({ children, navigation }) {
     selectType,
     uploadPfp,
     updateProfile,
+    createWallet,
   };
   return (
     <AuthContext.Provider value={value}>

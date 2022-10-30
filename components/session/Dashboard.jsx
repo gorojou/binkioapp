@@ -1,5 +1,5 @@
 import { View, Image, StyleSheet, TouchableOpacity } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import RText from "../RText";
 import Navbar from "./Navbar";
 import useAuth from "../../context/AuthContext";
@@ -7,8 +7,25 @@ import paid from "../../assets/paid.png";
 import send from "../../assets/send.png";
 import download from "../../assets/download.png";
 import PfpImage from "./PfpImage";
+import { useFTX } from "../../context/FTXContext";
+import ftx from "../../assets/ftx.png";
 export default function Dashboard({ navigation }) {
   const { currentUser } = useAuth();
+  const { getMarkets } = useFTX();
+  const [connected, setConnected] = useState(false);
+  useEffect(() => {
+    const app = async () => {
+      try {
+        const response = await getMarkets();
+        console.log(response);
+        setConnected(true);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    return app;
+  }, []);
+
   return (
     <>
       <View style={styles.header}>
@@ -21,6 +38,16 @@ export default function Dashboard({ navigation }) {
           </RText>
         </View>
         <PfpImage styles={styles.pfpImage} size={60} />
+      </View>
+      <View style={styles.ftxConection}>
+        <Image source={ftx} style={{ height: 80, width: 80 }} />
+        {connected ? (
+          <RText tipo={"bold"} style={{ color: "green" }}>
+            Conectado
+          </RText>
+        ) : (
+          <RText>Conectando Con FTX...</RText>
+        )}
       </View>
       <View style={styles.body}>
         <Activities navigation={navigation} title={"Cargar"} bg={download} />
@@ -79,5 +106,9 @@ const styles = StyleSheet.create({
     height: 100,
     width: 100,
     opacity: 0.05,
+  },
+  ftxConection: {
+    flexDirection: "row",
+    alignItems: "center",
   },
 });
