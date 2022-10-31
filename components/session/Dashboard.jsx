@@ -19,7 +19,13 @@ import ftx from "../../assets/ftx.png";
 export default function Dashboard({ navigation }) {
   const { currentUser } = useAuth();
   const { connected } = useFTX();
-
+  const [FTXStatus, setFTXStatus] = useState("");
+  const connectFTX = () => {
+    setFTXStatus("Conectando con FTX...");
+    setTimeout(() => {
+      setFTXStatus("Conectado");
+    }, 3000);
+  };
   return (
     <>
       <ScrollView style={styles.container}>
@@ -29,14 +35,24 @@ export default function Dashboard({ navigation }) {
               ¡Hola <RText tipo={"bold"}>{currentUser.nombre}</RText>!
             </RText>
             <View style={styles.ftxConection}>
-              <Image source={ftx} style={{ height: 32, width: 38 }} />
-              {connected ? (
-                <RText style={{ ...styles.FTXStatusText, color: "green" }}>
-                  Conectado
-                </RText>
+              <TouchableOpacity onPress={connectFTX}>
+                <Image source={ftx} style={{ height: 32, width: 38 }} />
+              </TouchableOpacity>
+              {FTXStatus ? (
+                <>
+                  {FTXStatus == "Conectado" ? (
+                    <RText style={{ ...styles.FTXStatusText, color: "green" }}>
+                      Conectado
+                    </RText>
+                  ) : (
+                    <RText style={styles.FTXStatusText}>
+                      Conectando Con FTX...
+                    </RText>
+                  )}
+                </>
               ) : (
                 <RText style={styles.FTXStatusText}>
-                  Conectando Con FTX...
+                  Presiona para conectar
                 </RText>
               )}
             </View>

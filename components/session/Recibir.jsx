@@ -6,6 +6,7 @@ import useAuth from "../../context/AuthContext";
 import Navbar from "./Navbar";
 import SelectToken from "./SelectToken";
 import CopyToClipboard from "../CopyToClipboard";
+import MainButton from "../buttons";
 export default function Recibir({ navigation }) {
   const { currentUser } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -23,10 +24,25 @@ export default function Recibir({ navigation }) {
               Recibir token en:
             </RText>
             {err && <RText style={s.errText}>{err}</RText>}
-
-            <SelectToken token={token} setToken={setToken} />
-            <CopyToClipboard value={currentUser.wallet.publicKey} />
-            <Image source={require("../../assets/qr.png")} style={styles.qr} />
+            {currentUser.wallet ? (
+              <>
+                <SelectToken token={token} setToken={setToken} />
+                <CopyToClipboard value={currentUser.wallet.publicKey} />
+                <Image
+                  source={require("../../assets/qr.png")}
+                  style={styles.qr}
+                />
+              </>
+            ) : (
+              <>
+                <RText style={{ ...styles.formTitle, marginTop: 30 }}>
+                  Necesitas crear una wallet
+                </RText>
+                <MainButton callback={() => navigation.navigate("wallet")}>
+                  Ir a crear Wallet
+                </MainButton>
+              </>
+            )}
           </View>
         </View>
       </ScrollView>
