@@ -1,67 +1,87 @@
-import { View, Image, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import RText from "../RText";
 import Navbar from "./Navbar";
 import useAuth from "../../context/AuthContext";
 import paid from "../../assets/paid.png";
 import send from "../../assets/send.png";
+import data from "../../assets/data.png";
 import download from "../../assets/download.png";
 import PfpImage from "./PfpImage";
 import { useFTX } from "../../context/FTXContext";
 import ftx from "../../assets/ftx.png";
 export default function Dashboard({ navigation }) {
   const { currentUser } = useAuth();
-  const { getMarkets } = useFTX();
-  const [connected, setConnected] = useState(false);
-  useEffect(() => {
-    const app = async () => {
-      try {
-        const response = await getMarkets();
-        console.log(response);
-        setConnected(true);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    return app;
-  }, []);
+  const { connected } = useFTX();
 
   return (
     <>
-      <View style={styles.header}>
-        <View>
-          <RText style={styles.titulo}>
-            ¡Hola <RText tipo={"bold"}>{currentUser.nombre}</RText>!
-          </RText>
-          <RText>
-            Balance Actual: <RText tipo={"bold"}>0.00</RText>
-          </RText>
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+          <View>
+            <RText style={styles.titulo}>
+              ¡Hola <RText tipo={"bold"}>{currentUser.nombre}</RText>!
+            </RText>
+            <View style={styles.ftxConection}>
+              <Image source={ftx} style={{ height: 32, width: 38 }} />
+              {connected ? (
+                <RText style={{ ...styles.FTXStatusText, color: "green" }}>
+                  Conectado
+                </RText>
+              ) : (
+                <RText style={styles.FTXStatusText}>
+                  Conectando Con FTX...
+                </RText>
+              )}
+            </View>
+          </View>
+          <PfpImage styles={styles.pfpImage} size={60} />
         </View>
-        <PfpImage styles={styles.pfpImage} size={60} />
-      </View>
-      <View style={styles.ftxConection}>
-        <Image source={ftx} style={{ height: 80, width: 80 }} />
-        {connected ? (
-          <RText tipo={"bold"} style={{ color: "green" }}>
-            Conectado
-          </RText>
-        ) : (
-          <RText>Conectando Con FTX...</RText>
-        )}
-      </View>
-      <View style={styles.body}>
-        <Activities navigation={navigation} title={"Cargar"} bg={download} />
-        <Activities navigation={navigation} title={"Enviar"} bg={send} />
-        <Activities navigation={navigation} title={"Recibir"} bg={paid} />
-      </View>
+
+        <View style={styles.body}>
+          <Activities
+            navigation={navigation}
+            title={"Solicitud de Credito"}
+            bg={download}
+            link={"solicitud"}
+          />
+          <Activities
+            navigation={navigation}
+            title={"Enviar"}
+            bg={send}
+            link={"enviar"}
+          />
+          <Activities
+            navigation={navigation}
+            title={"Garantía"}
+            bg={data}
+            link={"garantia"}
+          />
+          <Activities
+            navigation={navigation}
+            title={"Recibir"}
+            bg={paid}
+            link={"recibir"}
+          />
+        </View>
+      </ScrollView>
       <Navbar navigation={navigation} />
     </>
   );
 }
-const Activities = ({ title, navigation, bg }) => {
+const Activities = ({ title, navigation, bg, link }) => {
   return (
     <>
-      <TouchableOpacity style={styles.activity}>
+      <TouchableOpacity
+        style={styles.activity}
+        onPress={() => navigation.navigate(link)}
+      >
         <RText style={styles.titulo} tipo={"bold"}>
           {title}
         </RText>
@@ -71,9 +91,13 @@ const Activities = ({ title, navigation, bg }) => {
   );
 };
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    overflow: "scroll",
+  },
   header: {
     paddingHorizontal: 20,
-    paddingVertical: 30,
+    paddingVertical: 0,
     marginTop: 20,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -88,6 +112,7 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     alignItems: "center",
+    paddingBottom: 40,
   },
   activity: {
     position: "relative",
@@ -108,7 +133,13 @@ const styles = StyleSheet.create({
     opacity: 0.05,
   },
   ftxConection: {
+    paddingBottom: 20,
+    paddingTop: 5,
     flexDirection: "row",
     alignItems: "center",
+  },
+  FTXStatusText: {
+    fontSize: 10,
+    paddingLeft: 10,
   },
 });

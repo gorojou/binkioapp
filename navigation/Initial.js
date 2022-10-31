@@ -10,6 +10,10 @@ import Navbar from "../components/session/Navbar";
 import Wallet from "../components/session/Wallet";
 import Profile from "../components/session/Profile";
 import FTXProvider from "../context/FTXContext";
+import SolicitudCredito from "../components/session/SolicitudCredito";
+import Enviar from "../components/session/Enviar";
+import Garantia from "../components/session/Garantia";
+import Recibir from "../components/session/Recibir";
 const Stack = createNativeStackNavigator();
 
 const MyStack = () => {
@@ -32,6 +36,10 @@ const MyStack = () => {
                   <Stack.Screen name="dash" component={Dashboard} />
                   <Stack.Screen name="profile" component={Profile} />
                   <Stack.Screen name="wallet" component={Wallet} />
+                  <Stack.Screen name="solicitud" component={SolicitudCredito} />
+                  <Stack.Screen name="enviar" component={Enviar} />
+                  <Stack.Screen name="garantia" component={Garantia} />
+                  <Stack.Screen name="recibir" component={Recibir} />
                 </>
               ) : (
                 <Stack.Screen name="selectType" component={SelectType} />

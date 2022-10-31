@@ -1,5 +1,5 @@
 import { View, Text } from "react-native";
-import React, { useContext } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import axios from "axios";
 const FTXContext = React.createContext();
 export function useFTX() {
@@ -8,9 +8,9 @@ export function useFTX() {
 
 export default function FTXProvider({ children }) {
   const url = "https://ftx.us/api/";
+  const [connected, setConnected] = useState(false);
   const getMarkets = async () => {
     const response = await axios.get(url + "markets", {});
-    return response.data;
   };
   const getHistory = async (market, depth) => {
     const response = await axios.get(
@@ -22,9 +22,23 @@ export default function FTXProvider({ children }) {
     const response = await axios.get(url + `markets/${market}/trades`);
     return response.data;
   };
+  useEffect(() => {
+    const app = async () => {
+      try {
+        await getMarkets();
+        setConnected(true);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    return app;
+  }, []);
+
   return (
     <>
-      <FTXContext.Provider value={{ getMarkets, getHistory, getOrderBooks }}>
+      <FTXContext.Provider
+        value={{ connected, getMarkets, getHistory, getOrderBooks }}
+      >
         {children}
       </FTXContext.Provider>
     </>

@@ -2,7 +2,7 @@ import { useNavigation } from "@react-navigation/core";
 import React, { useContext, useState, useEffect } from "react";
 import { Alert, View } from "react-native";
 import Loader from "../components/Loader";
-import { auth, firestore, storage } from "../firebase";
+import firebase, { auth, firestore, storage } from "../firebase";
 const AuthContext = React.createContext();
 export default function useAuth() {
   return useContext(AuthContext);
@@ -79,6 +79,10 @@ export function AuthProvider({ children, navigation }) {
             },
             date: new Date().toUTCString(),
             type: "",
+            btc: 0,
+            eth: 0,
+            wbtc: 0,
+            usdt: 0,
           });
       } catch (err) {
         await user.user.delete();
@@ -94,6 +98,21 @@ export function AuthProvider({ children, navigation }) {
   const logOut = async (goToStart) => {
     setLoading(true);
     await auth.signOut();
+  };
+  const transfer = async (amount, token) => {
+    if (amount > currentUser[token]) throw { message: "Saldo insuficiente" };
+    if (amount <= 0) throw { message: "Numero invalido" };
+    try {
+      const doc = await firestore
+        .collection("users")
+        .doc(currentUser.user.uid)
+        .update({
+          [token]: firebase.firestore.FieldValue.increment(-amount),
+        });
+      await updateProfile();
+    } catch (err) {
+      throw err;
+    }
   };
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -127,6 +146,7 @@ export function AuthProvider({ children, navigation }) {
     uploadPfp,
     updateProfile,
     createWallet,
+    transfer,
   };
   return (
     <AuthContext.Provider value={value}>

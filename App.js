@@ -5,7 +5,12 @@ import { AuthProvider } from "./context/AuthContext";
 export default function App() {
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: "white", ...styles.container }}
+      style={{
+        flex: 1,
+        backgroundColor: "white",
+        overflow: "scroll",
+        ...styles.container,
+      }}
     >
       <AuthProvider>
         <View style={styles.titleContainer}>

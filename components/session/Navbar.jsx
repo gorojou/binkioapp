@@ -51,6 +51,7 @@ const styles = StyleSheet.create({
     borderStyle: "solid",
     borderWidth: 1,
     borderColor: "black",
+    backgroundColor: "white",
     justifyContent: "space-evenly",
     alignItems: "center",
     borderTopRightRadius: 10,
