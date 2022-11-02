@@ -26,7 +26,11 @@ export default function Wallet({ navigation }) {
       setWallet(wallet);
       setLoading(false);
     } else {
-      const response = await axios.get();
+      setTimeout(() => {
+        setLoading(false);
+        setErr("Algo salio mal, intente mas tarde");
+      }, 3000);
+      // const response = await axios.get();
     }
   };
   const saveWallet = async (wallet) => {
