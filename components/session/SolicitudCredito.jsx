@@ -21,7 +21,8 @@ export default function SolicitudCredito({ navigation }) {
   const [amount, setAmount] = useState();
   const solicitar = async () => {
     if (!amount) return setErr("Numero invalido");
-    if (amount > currentUser[token]) return setErr("Solicitud muy alta");
+    if (amount > currentUser.balance[token])
+      return setErr("Solicitud muy alta");
     try {
       setLoading(true);
       setTimeout(() => {
@@ -55,7 +56,9 @@ export default function SolicitudCredito({ navigation }) {
                 Tu balance actual
               </RText>
               <RText style={styles.balanceNum}>
-                {currentUser[token] ? currentUser[token] : "0.00"}
+                {currentUser.balance[token]
+                  ? currentUser.balance[token]
+                  : "0.00"}
               </RText>
             </View>
             <KeyboardAvoidingView>

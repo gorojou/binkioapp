@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import RText from "../RText";
 import MainButton from "../buttons";
 import Navbar from "./Navbar";
+import Bitcoin from "../../assets/svg/bitcoin.svg";
+import Ethereum from "../../assets/svg/ethereum.svg";
 import useAuth from "../../context/AuthContext";
 import "@ethersproject/shims";
 import { ethers } from "ethers";
@@ -10,21 +12,27 @@ import s from "../styles";
 import Loader from "../Loader";
 import Copy from "../../assets/svg/copy.svg";
 import * as Clipboard from "expo-clipboard";
+import axios from "axios";
 export default function Wallet({ navigation }) {
   const { currentUser, createWallet } = useAuth();
   const [wallet, setWallet] = useState();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const createUserWallet = () => {
+  const [token, setToken] = useState("btc");
+  const createUserWallet = async () => {
     setLoading(true);
-    const wallet = ethers.Wallet.createRandom();
-    setWallet(wallet);
-    setLoading(false);
+    if (token === "eth") {
+      const wallet = await ethers.Wallet.createRandom();
+      setWallet(wallet);
+      setLoading(false);
+    } else {
+      const response = await axios.get();
+    }
   };
   const saveWallet = async (wallet) => {
     try {
       setLoading(true);
-      await createWallet(wallet);
+      await createWallet(wallet, token === "btc" ? token : "eth");
     } catch (err) {}
     setLoading(false);
     setErr(err.message);
@@ -33,11 +41,25 @@ export default function Wallet({ navigation }) {
     <>
       <View style={styles.formulario}>
         <View style={{ width: "90%" }}>
-          {!currentUser.wallet ? (
+          <RText style={styles.formTitle}>Selecciona tu tipo de wallet</RText>
+          <View style={styles.selectActivo}>
+            <TouchableOpacity
+              style={token === "btc" ? styles.activoSelected : styles.activo}
+              onPress={() => setToken("btc")}
+            >
+              <Bitcoin height={50} width={50} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={token === "eth" ? styles.activoSelected : styles.activo}
+              onPress={() => setToken("eth")}
+            >
+              <Ethereum height={50} width={50} />
+            </TouchableOpacity>
+          </View>
+          {!currentUser[token].publicKey ? (
             <>
               {wallet ? (
                 <>
-                  <RText style={styles.formTitle}>Guarda tu Wallet</RText>
                   {err && <RText style={s.errText}>{err}</RText>}
                   <View style={styles.walletContainer}>
                     <RText style={styles.wallet}>{wallet.address}</RText>
@@ -56,7 +78,10 @@ export default function Wallet({ navigation }) {
                 </>
               ) : (
                 <>
-                  <RText style={styles.formTitle}>
+                  <RText
+                    style={{ ...styles.formTitle, marginTop: 20 }}
+                    tipo={"thin"}
+                  >
                     No tienes ninguna wallet
                   </RText>
                   <MainButton callback={() => createUserWallet()}>
@@ -67,15 +92,14 @@ export default function Wallet({ navigation }) {
             </>
           ) : (
             <>
-              <RText style={styles.formTitle}>Tu wallet asiganada</RText>
               <View style={styles.walletContainer}>
                 <RText style={styles.wallet}>
-                  {currentUser.wallet.publicKey}
+                  {currentUser[token].publicKey}
                 </RText>
                 <TouchableOpacity
                   onPress={() => {
                     Alert.alert("Copiado");
-                    Clipboard.setStringAsync(currentUser.wallet.publicKey);
+                    Clipboard.setStringAsync(currentUser[token].publicKey);
                   }}
                 >
                   <Copy height={30} width={30} fill={"black"} />
@@ -150,6 +174,50 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     elevation: 11,
     backgroundColor: "white",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+  },
+  selectionView: {
+    flexDirection: "row",
+    marginTop: 20,
+  },
+  selectActivo: {
+    flexDirection: "row",
+    width: "100%",
+    padding: 3,
+  },
+  activoSelected: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 20,
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.58,
+    shadowRadius: 16.0,
+
+    elevation: 24,
+    marginHorizontal: 2.5,
+    shadowColor: "#5d22fa",
+    backgroundColor: "white",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  activo: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 20,
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.36,
+    shadowRadius: 6.68,
+    marginHorizontal: 2.5,
+    elevation: 11,
+    backgroundColor: "#f3f3f3",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",

@@ -92,7 +92,9 @@ export default function Enviar({ navigation }) {
                 Tu balance actual
               </RText>
               <RText style={styles.balanceNum}>
-                {currentUser[activo] ? currentUser[activo] : "0.00"}
+                {currentUser.balance[activo]
+                  ? currentUser.balance[activo]
+                  : "0.00"}
               </RText>
             </View>
             <KeyboardAvoidingView>

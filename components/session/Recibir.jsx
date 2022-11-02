@@ -1,4 +1,11 @@
-import { View, StyleSheet, Dimensions, Image, ScrollView } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Dimensions,
+  Image,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 import React, { useState } from "react";
 import RText from "../RText";
 import s from "../styles";
@@ -7,6 +14,8 @@ import Navbar from "./Navbar";
 import SelectToken from "./SelectToken";
 import CopyToClipboard from "../CopyToClipboard";
 import MainButton from "../buttons";
+import Bitcoin from "../../assets/svg/bitcoin.svg";
+import Ethereum from "../../assets/svg/ethereum.svg";
 export default function Recibir({ navigation }) {
   const { currentUser } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -24,10 +33,17 @@ export default function Recibir({ navigation }) {
               Recibir token en:
             </RText>
             {err && <RText style={s.errText}>{err}</RText>}
-            {currentUser.wallet ? (
+
+            <SelectToken token={token} setToken={setToken} />
+            {currentUser[token === "btc" ? token : "eth"].publicKey ? (
               <>
-                <SelectToken token={token} setToken={setToken} />
-                <CopyToClipboard value={currentUser.wallet.publicKey} />
+                <CopyToClipboard
+                  value={
+                    token === "btc"
+                      ? currentUser[token].publicKey
+                      : currentUser.eth.publicKey
+                  }
+                />
                 <Image
                   source={require("../../assets/qr.png")}
                   style={styles.qr}

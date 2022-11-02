@@ -21,12 +21,12 @@ export function AuthProvider({ children, navigation }) {
       throw err;
     }
   };
-  const createWallet = async (wallet) => {
+  const createWallet = async (wallet, token) => {
     await firestore
       .collection("users")
       .doc(currentUser.user.uid)
       .update({
-        wallet: {
+        [token]: {
           publicKey: wallet.address,
           privKey: wallet.privateKey,
           mnemonic: wallet.mnemonic,
@@ -79,10 +79,14 @@ export function AuthProvider({ children, navigation }) {
             },
             date: new Date().toUTCString(),
             type: "",
-            btc: 0,
-            eth: 0,
-            wbtc: 0,
-            usdt: 0,
+            balance: {
+              btc: 0,
+              eth: 0,
+              wbtc: 0,
+              usdt: 0,
+            },
+            btc: {},
+            eth: {},
           });
       } catch (err) {
         await user.user.delete();
@@ -100,14 +104,18 @@ export function AuthProvider({ children, navigation }) {
     await auth.signOut();
   };
   const transfer = async (amount, token) => {
-    if (amount > currentUser[token]) throw { message: "Saldo insuficiente" };
+    if (amount > currentUser.balance[token])
+      throw { message: "Saldo insuficiente" };
     if (amount <= 0) throw { message: "Numero invalido" };
     try {
       const doc = await firestore
         .collection("users")
         .doc(currentUser.user.uid)
         .update({
-          [token]: firebase.firestore.FieldValue.increment(-amount),
+          balance: {
+            ...currentUser.balance,
+            [token]: currentUser.balance[token] - amount,
+          },
         });
       await updateProfile();
     } catch (err) {

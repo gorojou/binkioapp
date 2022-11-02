@@ -21,9 +21,10 @@ export default function Dashboard({ navigation }) {
   const { connected } = useFTX();
   const [FTXStatus, setFTXStatus] = useState("");
   const connectFTX = () => {
+    if (FTXStatus === "Conectado a FTX") return;
     setFTXStatus("Conectando con FTX...");
     setTimeout(() => {
-      setFTXStatus("Conectado");
+      setFTXStatus("Conectado a FTX");
     }, 3000);
   };
   return (
@@ -34,15 +35,14 @@ export default function Dashboard({ navigation }) {
             <RText style={styles.titulo}>
               ¡Hola <RText tipo={"bold"}>{currentUser.nombre}</RText>!
             </RText>
-            <View style={styles.ftxConection}>
-              <TouchableOpacity onPress={connectFTX}>
-                <Image source={ftx} style={{ height: 32, width: 38 }} />
-              </TouchableOpacity>
+            <TouchableOpacity style={styles.ftxConection} onPress={connectFTX}>
+              <Image source={ftx} style={{ height: 32, width: 38 }} />
+
               {FTXStatus ? (
                 <>
-                  {FTXStatus == "Conectado" ? (
+                  {FTXStatus == "Conectado a FTX" ? (
                     <RText style={{ ...styles.FTXStatusText, color: "green" }}>
-                      Conectado
+                      {FTXStatus}
                     </RText>
                   ) : (
                     <RText style={styles.FTXStatusText}>
@@ -52,10 +52,10 @@ export default function Dashboard({ navigation }) {
                 </>
               ) : (
                 <RText style={styles.FTXStatusText}>
-                  Presiona para conectar
+                  Presiona para conectar con FTX
                 </RText>
               )}
-            </View>
+            </TouchableOpacity>
           </View>
           <PfpImage styles={styles.pfpImage} size={60} />
         </View>
@@ -149,8 +149,9 @@ const styles = StyleSheet.create({
     opacity: 0.05,
   },
   ftxConection: {
-    paddingBottom: 20,
-    paddingTop: 5,
+    padding: 10,
+    backgroundColor: "#f3f3f3",
+    borderRadius: 30,
     flexDirection: "row",
     alignItems: "center",
   },
