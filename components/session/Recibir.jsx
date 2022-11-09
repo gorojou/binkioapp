@@ -29,21 +29,11 @@ export default function Recibir({ navigation }) {
             <RText style={styles.formTitle} tipo={"bold"}>
               Recibir
             </RText>
-            <RText style={styles.sessionTitle} tipo={"thin"}>
-              Recibir token en:
-            </RText>
             {err && <RText style={s.errText}>{err}</RText>}
 
-            <SelectToken token={token} setToken={setToken} />
-            {currentUser[token === "btc" ? token : "eth"].publicKey ? (
+            {currentUser.wallet.publicKey ? (
               <>
-                <CopyToClipboard
-                  value={
-                    token === "btc"
-                      ? currentUser[token].publicKey
-                      : currentUser.eth.publicKey
-                  }
-                />
+                <CopyToClipboard value={currentUser.wallet.publicKey} />
                 <Image
                   source={require("../../assets/qr.png")}
                   style={styles.qr}

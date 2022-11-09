@@ -55,11 +55,7 @@ export default function SolicitudCredito({ navigation }) {
               <RText style={styles.balance} tipo={"thin"}>
                 Tu balance actual
               </RText>
-              <RText style={styles.balanceNum}>
-                {currentUser.balance[token]
-                  ? currentUser.balance[token]
-                  : "0.00"}
-              </RText>
+              <RText style={styles.balanceNum}>0.00</RText>
             </View>
             <KeyboardAvoidingView>
               <View style={styles.intputContainer}>

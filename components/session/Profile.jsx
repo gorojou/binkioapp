@@ -7,6 +7,7 @@ import * as ImagePicker from "expo-image-picker";
 import MainButton, { SecondaryButton } from "../buttons";
 import firebase, { storage, firestore } from "../../firebase";
 import Loader from "../Loader";
+import PfpImage from "./PfpImage";
 export default function Profile({ navigation }) {
   const { currentUser, uploadPfp, updateProfile } = useAuth();
   const [image, setImage] = useState(null);
@@ -53,16 +54,25 @@ export default function Profile({ navigation }) {
     <>
       <View style={styles.header}>
         <TouchableOpacity onPress={pickImage}>
-          <Image
-            source={
-              image
-                ? { uri: image }
-                : currentUser.pfp
-                ? { uri: currentUser.pfp }
-                : require("../../assets/blankpfp.jpg")
-            }
-            style={styles.pfpImage}
-          />
+          {image ? (
+            <Image
+              source={
+                image
+                  ? { uri: image }
+                  : currentUser.pfp
+                  ? { uri: currentUser.pfp }
+                  : require("../../assets/blankpfp.jpg")
+              }
+              style={styles.pfpImage}
+            />
+          ) : (
+            <PfpImage size={120} />
+          )}
+          <View style={styles.addPfpIndicator}>
+            <RText style={styles.addPfpIndicatorText} tipo={"bold"}>
+              +
+            </RText>
+          </View>
         </TouchableOpacity>
         {image && (
           <MainButton callback={uploadImageAsync}>
@@ -96,7 +106,9 @@ export default function Profile({ navigation }) {
             {currentUser.nacimiento.a}
           </RText>
         </View>
-        <SecondaryButton callback={logOut}>Cerrar sesión</SecondaryButton>
+        <SecondaryButton callback={logOut} width={0.8}>
+          Cerrar sesión
+        </SecondaryButton>
       </View>
       <Navbar navigation={navigation} />
       {loading && (
@@ -174,5 +186,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-evenly",
     width: "100%",
+  },
+  addPfpIndicator: {
+    position: "absolute",
+    justifyContent: "center",
+    alignItems: "center",
+    bottom: 7,
+    right: 7,
+    backgroundColor: "#8E63F1",
+    width: 20,
+    height: 20,
+    borderRadius: 30,
+  },
+  addPfpIndicatorText: {
+    color: "white",
+    fontSize: 15,
   },
 });

@@ -29,6 +29,7 @@ export default function PfpImage({ styles, size }) {
             ...styles,
           }}
         />
+
         {!imageLoaded && (
           <>
             <Image

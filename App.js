@@ -1,3 +1,4 @@
+import "./shim";
 import { StyleSheet, Text, View, SafeAreaView, StatusBar } from "react-native";
 import Initial from "./navigation/Initial";
 import TitleLogo from "./components/TitleLogo";

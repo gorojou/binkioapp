@@ -3,6 +3,7 @@ import React, { useContext, useState, useEffect } from "react";
 import { Alert, View } from "react-native";
 import Loader from "../components/Loader";
 import firebase, { auth, firestore, storage } from "../firebase";
+import * as SecureStore from "expo-secure-store";
 const AuthContext = React.createContext();
 export default function useAuth() {
   return useContext(AuthContext);
@@ -12,6 +13,8 @@ export function AuthProvider({ children, navigation }) {
   const [loading, setLoading] = useState(true);
   const logIn = async (email, password) => {
     try {
+      await SecureStore.setItemAsync("USER_EMAIL", email);
+      await SecureStore.setItemAsync("USER_PASS", password);
       const user = await auth.signInWithEmailAndPassword(email, password);
     } catch (err) {
       if (err.code === "auth/wrong-password")
@@ -21,15 +24,15 @@ export function AuthProvider({ children, navigation }) {
       throw err;
     }
   };
-  const createWallet = async (wallet, token) => {
+  const createWallet = async (wallet) => {
     await firestore
       .collection("users")
       .doc(currentUser.user.uid)
       .update({
-        [token]: {
+        wallet: {
           publicKey: wallet.address,
-          privKey: wallet.privateKey,
-          mnemonic: wallet.mnemonic,
+          privKey: wallet._signingKey().privateKey,
+          mnemonic: wallet._mnemonic().phrase,
         },
       });
     await updateProfile();
@@ -79,15 +82,8 @@ export function AuthProvider({ children, navigation }) {
             },
             date: new Date().toUTCString(),
             type: "",
-            balance: {
-              btc: 0,
-              eth: 0,
-              wbtc: 0,
-              usdt: 0,
-            },
-            btc: {},
-            eth: {},
           });
+        await logIn(email, password);
       } catch (err) {
         await user.user.delete();
         console.log(err);
@@ -101,6 +97,8 @@ export function AuthProvider({ children, navigation }) {
   };
   const logOut = async (goToStart) => {
     setLoading(true);
+    await SecureStore.deleteItemAsync("USER_EMAIL", {});
+    await SecureStore.deleteItemAsync("USER_PASS", {});
     await auth.signOut();
   };
   const transfer = async (amount, token) => {
@@ -122,6 +120,17 @@ export function AuthProvider({ children, navigation }) {
       throw err;
     }
   };
+  const setStoredSession = async (user) => {
+    const pass = await SecureStore.getItemAsync("USER_PASS");
+    try {
+      await logIn(user, pass);
+    } catch (err) {
+      console.log(err);
+      await SecureStore.deleteItemAsync("USER_EMAIL", {});
+      await SecureStore.deleteItemAsync("USER_PASS", {});
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setLoading(true);
@@ -137,11 +146,17 @@ export function AuthProvider({ children, navigation }) {
           logOut();
           Alert.alert("Algo salio mal");
         }
+        setLoading(false);
       } else {
-        setCurrentUser(user);
-        console.log(user);
+        const storedUser = await SecureStore.getItemAsync("USER_EMAIL");
+        if (storedUser) {
+          await setStoredSession(storedUser);
+        } else {
+          setCurrentUser(user);
+          setLoading(false);
+          console.log(user);
+        }
       }
-      setLoading(false);
     });
     return unsubscribe;
   }, []);

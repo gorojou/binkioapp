@@ -1,42 +1,32 @@
-import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { View, StyleSheet, TouchableOpacity, TextInput } from "react-native";
 import React, { useState } from "react";
 import RText from "../RText";
-import MainButton from "../buttons";
+import MainButton, { SecondaryButton } from "../buttons";
 import Navbar from "./Navbar";
-import Bitcoin from "../../assets/svg/bitcoin.svg";
-import Ethereum from "../../assets/svg/ethereum.svg";
-import useAuth from "../../context/AuthContext";
 import "@ethersproject/shims";
-import { ethers } from "ethers";
-import s from "../styles";
 import Loader from "../Loader";
-import Copy from "../../assets/svg/copy.svg";
-import * as Clipboard from "expo-clipboard";
-import axios from "axios";
-export default function Wallet({ navigation }) {
+import CopyToClipboard from "../CopyToClipboard";
+import useAuth from "../../context/AuthContext";
+import s from "../styles";
+import * as SecureStore from "expo-secure-store";
+import { useBlockChainContext } from "../../context/BlockchainContext";
+export default function Wallet({ navigation, route }) {
   const { currentUser, createWallet } = useAuth();
+  const { createRandomWallet } = useBlockChainContext();
   const [wallet, setWallet] = useState();
   const [loading, setLoading] = useState(false);
+  const [show, setShow] = useState(false);
   const [err, setErr] = useState("");
-  const [token, setToken] = useState("btc");
   const createUserWallet = async () => {
     setLoading(true);
-    if (token === "eth") {
-      const wallet = await ethers.Wallet.createRandom();
-      setWallet(wallet);
-      setLoading(false);
-    } else {
-      setTimeout(() => {
-        setLoading(false);
-        setErr("Algo salio mal, intente mas tarde");
-      }, 3000);
-      // const response = await axios.get();
-    }
+    const wallet = await createRandomWallet();
+    setWallet(wallet);
+    setLoading(false);
   };
   const saveWallet = async (wallet) => {
     try {
       setLoading(true);
-      await createWallet(wallet, token === "btc" ? token : "eth");
+      await createWallet(wallet);
     } catch (err) {}
     setLoading(false);
     setErr(err.message);
@@ -44,50 +34,42 @@ export default function Wallet({ navigation }) {
   return (
     <>
       <View style={styles.formulario}>
-        <View style={{ width: "90%" }}>
-          <RText style={styles.formTitle}>Selecciona tu tipo de wallet</RText>
-          <View style={styles.selectActivo}>
-            <TouchableOpacity
-              style={token === "btc" ? styles.activoSelected : styles.activo}
-              onPress={() => setToken("btc")}
-            >
-              <Bitcoin height={50} width={50} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={token === "eth" ? styles.activoSelected : styles.activo}
-              onPress={() => setToken("eth")}
-            >
-              <Ethereum height={50} width={50} />
-            </TouchableOpacity>
-          </View>
-          {!currentUser[token].publicKey ? (
+        <View style={{ width: "90%", alignItems: "center" }}>
+          {!currentUser.wallet ? (
             <>
               {wallet ? (
                 <>
+                  <RText style={{ ...styles.formTitle, marginTop: 20 }}>
+                    Guarda tu nueva wallet
+                  </RText>
+                  <RText
+                    style={{
+                      ...styles.sessionTitle,
+                      textAlign: "center",
+                      marginBottom: 20,
+                    }}
+                    tipo={"thin"}
+                  >
+                    Por favor almacena la informacion de tu wallet en un lugar
+                    seguro
+                  </RText>
                   {err && <RText style={s.errText}>{err}</RText>}
-                  <View style={styles.walletContainer}>
-                    <RText style={styles.wallet}>{wallet.address}</RText>
-                    <TouchableOpacity
-                      onPress={() => {
-                        Alert.alert("Copiado");
-                        Clipboard.setStringAsync(wallet.address);
-                      }}
-                    >
-                      <Copy height={30} width={30} fill={"black"} />
-                    </TouchableOpacity>
-                  </View>
-                  <MainButton callback={() => saveWallet(wallet)}>
+
+                  <RText>Mnemonic</RText>
+                  <CopyToClipboard value={wallet._mnemonic().phrase} />
+
+                  <RText>Direccion Publica</RText>
+                  <CopyToClipboard value={wallet.address} />
+                  <MainButton callback={() => saveWallet(wallet)} width={0.8}>
                     Guardar
                   </MainButton>
                 </>
               ) : (
                 <>
-                  <RText
-                    style={{ ...styles.formTitle, marginTop: 20 }}
-                    tipo={"thin"}
-                  >
-                    No tienes ninguna wallet
+                  <RText style={{ ...styles.formTitle, marginTop: 20 }}>
+                    ¡Crea una nueva wallet!
                   </RText>
+
                   <MainButton callback={() => createUserWallet()}>
                     Generar Wallet
                   </MainButton>
@@ -96,28 +78,124 @@ export default function Wallet({ navigation }) {
             </>
           ) : (
             <>
-              <View style={styles.walletContainer}>
-                <RText style={styles.wallet}>
-                  {currentUser[token].publicKey}
-                </RText>
-                <TouchableOpacity
-                  onPress={() => {
-                    Alert.alert("Copiado");
-                    Clipboard.setStringAsync(currentUser[token].publicKey);
-                  }}
-                >
-                  <Copy height={30} width={30} fill={"black"} />
-                </TouchableOpacity>
-              </View>
+              <RText style={{ ...styles.formTitle, marginTop: 20 }}>
+                Tu Wallet
+              </RText>
+              <RText style={styles.sessionTitle} tipo={"thin"}>
+                Tu wallet es asignada al crear una cuenta
+              </RText>
+              <CopyToClipboard value={currentUser.wallet.publicKey} />
+              <SecondaryButton callback={() => setShow(true)}>
+                Ver Datos privados
+              </SecondaryButton>
             </>
           )}
           {loading && <Loader size={100} />}
         </View>
+        {show && <PopUpMnemonic setShow={setShow} />}
       </View>
-      <Navbar navigation={navigation} />
+      {route.name === "wallet" && <Navbar navigation={navigation} />}
     </>
   );
 }
+const PopUpMnemonic = ({ setShow }) => {
+  const [confirm, setConfirm] = useState(false);
+  const [passConfirmed, setPassConfirmed] = useState(false);
+  const [pass, setPass] = useState();
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState("");
+  const { currentUser } = useAuth();
+
+  const confirmPass = async () => {
+    setLoading(true);
+    const storedPass = await SecureStore.getItemAsync("USER_PASS");
+    if (storedPass === pass) {
+      setLoading(false);
+      return setPassConfirmed(true);
+    }
+    setLoading(false);
+    setErr("Las contraseñas no coinciden");
+  };
+  return (
+    <>
+      <TouchableOpacity
+        style={styles.popUpContainer}
+        onPress={() => setShow(false)}
+      >
+        <View
+          style={styles.popup}
+          onStartShouldSetResponder={(event) => true}
+          onTouchEnd={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          {confirm ? (
+            <>
+              {passConfirmed ? (
+                <>
+                  <RText style={{ ...styles.formTitle, marginVertical: 20 }}>
+                    Los datos de tu wallet
+                  </RText>
+                  <View></View>
+                  <RText style={{ textAlign: "center" }}>Frase mnemonic</RText>
+                  <CopyToClipboard value={currentUser.wallet.mnemonic} />
+                  <RText style={{ textAlign: "center" }}>Llave Privada</RText>
+                  <CopyToClipboard value={currentUser.wallet.privKey} />
+                  <MainButton width={0.8} callback={() => setShow(false)}>
+                    Volver
+                  </MainButton>
+                </>
+              ) : (
+                <>
+                  <RText style={{ ...styles.formTitle, marginVertical: 20 }}>
+                    Coloca tu contraseña para continuar
+                  </RText>
+                  {err && (
+                    <RText style={{ ...s.errText, textAlign: "center" }}>
+                      {err}
+                    </RText>
+                  )}
+                  <View style={s.intputContainer}>
+                    <TextInput
+                      style={s.input}
+                      placeholder="Contraseña"
+                      value={pass}
+                      secureTextEntry={true}
+                      onChangeText={(value) => setPass(value)}
+                    />
+                  </View>
+                  <MainButton width={0.8} callback={() => confirmPass()}>
+                    Aceptar
+                  </MainButton>
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              <RText style={{ ...styles.formTitle, marginVertical: 20 }}>
+                Estas Seguro?
+              </RText>
+              <RText
+                style={{ ...styles.sessionTitle, textAlign: "center" }}
+                tipo={"thin"}
+              >
+                Los datos privados de tu cuenta deberian ser vistos solo por ti
+                en una red y lugar seguro
+              </RText>
+              <SecondaryButton width={0.8} callback={() => setConfirm(true)}>
+                Ver Datos
+              </SecondaryButton>
+              <MainButton width={0.8} callback={() => setShow(false)}>
+                Cancelar
+              </MainButton>
+            </>
+          )}
+          {loading && <Loader size={100} />}
+        </View>
+      </TouchableOpacity>
+    </>
+  );
+};
 const styles = StyleSheet.create({
   formulario: {
     justifyContent: "center",
@@ -225,5 +303,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
+  },
+  popUpContainer: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#f3f3f3aa",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  popup: {
+    width: "90%",
+    backgroundColor: "white",
+    padding: 15,
+    borderRadius: 20,
   },
 });

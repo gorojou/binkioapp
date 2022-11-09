@@ -50,9 +50,9 @@ export default function Garantia({ navigation }) {
                 Tu balance actual
               </RText>
               <RText style={styles.balanceNum}>
-                {currentUser.balance[token]
-                  ? currentUser.balance[token]
-                  : "0.00"}
+                {/* {currentUser.balance[token] */}
+                {/* ? currentUser.balance[token] */}
+                0.00
               </RText>
             </View>
             <KeyboardAvoidingView>
