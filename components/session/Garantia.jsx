@@ -13,11 +13,12 @@ import s from "../styles";
 import useAuth from "../../context/AuthContext";
 import Navbar from "./Navbar";
 import SelectToken from "./SelectToken";
+import { useBlockChainContext } from "../../context/BlockchainContext";
 export default function Garantia({ navigation }) {
-  const { currentUser, transfer } = useAuth();
+  const { token } = useBlockChainContext();
+  const { currentUser, transfer, balance } = useAuth();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const [token, setToken] = useState("btc");
   const [amount, setAmount] = useState();
   const solicitar = async () => {
     if (!amount) return setErr("Numero invalido");
@@ -44,15 +45,13 @@ export default function Garantia({ navigation }) {
             <RText style={styles.titulo} tipo={"thin"}>
               Red
             </RText>
-            <SelectToken token={token} setToken={setToken} />
+            <SelectToken />
             <View style={styles.balanceContainer}>
               <RText style={styles.balance} tipo={"thin"}>
                 Tu balance actual
               </RText>
               <RText style={styles.balanceNum}>
-                {/* {currentUser.balance[token] */}
-                {/* ? currentUser.balance[token] */}
-                0.00
+                {balance[token] !== null ? balance[token] : "-.--"}
               </RText>
             </View>
             <KeyboardAvoidingView>

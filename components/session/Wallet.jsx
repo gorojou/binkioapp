@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import RText from "../RText";
 import MainButton, { SecondaryButton } from "../buttons";
 import Navbar from "./Navbar";
-import "@ethersproject/shims";
 import Loader from "../Loader";
 import CopyToClipboard from "../CopyToClipboard";
 import useAuth from "../../context/AuthContext";
@@ -310,12 +309,20 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#f3f3f3aa",
+    backgroundColor: "#ffffffaa",
     justifyContent: "center",
     alignItems: "center",
   },
   popup: {
     width: "90%",
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.36,
+    shadowRadius: 6.68,
+    marginHorizontal: 2.5,
+    elevation: 11,
     backgroundColor: "white",
     padding: 15,
     borderRadius: 20,

@@ -1,11 +1,13 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import React from "react";
-import Bitcoin from "../../assets/svg/bitcoin.svg";
-import Ethereum from "../../assets/svg/ethereum.svg";
-import WBTC from "../../assets/svg/wBTC.svg";
-import USDT from "../../assets/svg/USDT.svg";
+import Bitcoin from "../../assets/svg/btc.svg";
+import Ethereum from "../../assets/svg/eth.svg";
+import WBTC from "../../assets/svg/wbtc.svg";
+import USDT from "../../assets/svg/usdt.svg";
+import { useBlockChainContext } from "../../context/BlockchainContext";
 
-export default function SelectToken({ token, setToken }) {
+export default function SelectToken() {
+  const { token, setToken } = useBlockChainContext();
   return (
     <View style={styles.selectActivo}>
       <TouchableOpacity
@@ -76,6 +78,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6.68,
     marginHorizontal: 2.5,
     elevation: 11,
+    opacity: 0.85,
     backgroundColor: "#f3f3f3",
     justifyContent: "center",
     alignItems: "center",

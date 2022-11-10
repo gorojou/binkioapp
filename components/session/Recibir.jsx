@@ -14,8 +14,6 @@ import Navbar from "./Navbar";
 import SelectToken from "./SelectToken";
 import CopyToClipboard from "../CopyToClipboard";
 import MainButton from "../buttons";
-import Bitcoin from "../../assets/svg/bitcoin.svg";
-import Ethereum from "../../assets/svg/ethereum.svg";
 export default function Recibir({ navigation }) {
   const { currentUser } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -29,6 +27,7 @@ export default function Recibir({ navigation }) {
             <RText style={styles.formTitle} tipo={"bold"}>
               Recibir
             </RText>
+            <SelectToken />
             {err && <RText style={s.errText}>{err}</RText>}
 
             {currentUser.wallet.publicKey ? (

@@ -13,16 +13,16 @@ import s from "../styles";
 import useAuth from "../../context/AuthContext";
 import Navbar from "./Navbar";
 import SelectToken from "./SelectToken";
+import { useBlockChainContext } from "../../context/BlockchainContext";
 export default function SolicitudCredito({ navigation }) {
-  const { currentUser, transfer } = useAuth();
+  const { currentUser, balance, transfer } = useAuth();
+  const { token } = useBlockChainContext();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const [token, setToken] = useState("btc");
   const [amount, setAmount] = useState();
   const solicitar = async () => {
     if (!amount) return setErr("Numero invalido");
-    if (amount > currentUser.balance[token])
-      return setErr("Solicitud muy alta");
+    if (amount > balance[token]) return setErr("Solicitud muy alta");
     try {
       setLoading(true);
       setTimeout(() => {
@@ -50,12 +50,14 @@ export default function SolicitudCredito({ navigation }) {
             <RText style={styles.titulo} tipo={"thin"}>
               Red
             </RText>
-            <SelectToken token={token} setToken={setToken} />
+            <SelectToken />
             <View style={styles.balanceContainer}>
               <RText style={styles.balance} tipo={"thin"}>
                 Tu balance actual
               </RText>
-              <RText style={styles.balanceNum}>0.00</RText>
+              <RText style={styles.balanceNum}>
+                {balance[token] !== null ? balance[token] : "-.--"}
+              </RText>
             </View>
             <KeyboardAvoidingView>
               <View style={styles.intputContainer}>

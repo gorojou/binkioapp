@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import RText from "../RText";
 import Navbar from "./Navbar";
 import useAuth from "../../context/AuthContext";
@@ -14,12 +14,17 @@ import send from "../../assets/send.png";
 import data from "../../assets/data.png";
 import download from "../../assets/download.png";
 import PfpImage from "./PfpImage";
-import { useFTX } from "../../context/FTXContext";
 import ftx from "../../assets/ftx.png";
+import CurrentTokenSvg from "./CurrentTokenSvg";
+import { useBlockChainContext } from "../../context/BlockchainContext";
+import Popup from "./Popup";
+import SelectToken from "./SelectToken";
+import MainButton from "../buttons";
 export default function Dashboard({ navigation }) {
-  const { currentUser } = useAuth();
-  const { connected } = useFTX();
+  const { currentUser, balance } = useAuth();
+  const { token } = useBlockChainContext();
   const [FTXStatus, setFTXStatus] = useState("");
+  const [show, setShow] = useState(false);
   const connectFTX = () => {
     if (FTXStatus === "Conectado a FTX") return;
     setFTXStatus("Conectando con FTX...");
@@ -36,7 +41,7 @@ export default function Dashboard({ navigation }) {
               ¡Hola <RText tipo={"bold"}>{currentUser.nombre}</RText>!
             </RText>
             <TouchableOpacity style={styles.ftxConection} onPress={connectFTX}>
-              <Image source={ftx} style={{ height: 32, width: 38 }} />
+              <Image source={ftx} style={{ height: 25, width: 30 }} />
 
               {FTXStatus ? (
                 <>
@@ -56,8 +61,19 @@ export default function Dashboard({ navigation }) {
                 </RText>
               )}
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.dashBalance}
+              onPress={() => setShow(true)}
+            >
+              <RText style={styles.balance}>
+                Balance: {balance[token] === null ? "-.--" : balance[token]}
+              </RText>
+              <CurrentTokenSvg height={20} width={20} />
+            </TouchableOpacity>
           </View>
-          <PfpImage styles={styles.pfpImage} size={60} />
+          <View>
+            <PfpImage styles={styles.pfpImage} size={60} />
+          </View>
         </View>
 
         <View style={styles.body}>
@@ -87,6 +103,23 @@ export default function Dashboard({ navigation }) {
           />
         </View>
       </ScrollView>
+      {show && (
+        <Popup setShow={setShow}>
+          <RText
+            style={{
+              ...styles.titulo,
+              textAlign: "center",
+              marginVertical: 15,
+            }}
+          >
+            Selecciona el Token que quieras
+          </RText>
+          <SelectToken />
+          <MainButton width={0.8} callback={() => setShow(false)}>
+            Listo
+          </MainButton>
+        </Popup>
+      )}
       <Navbar navigation={navigation} />
     </>
   );
@@ -149,7 +182,8 @@ const styles = StyleSheet.create({
     opacity: 0.05,
   },
   ftxConection: {
-    padding: 10,
+    padding: 5,
+    marginTop: 5,
     backgroundColor: "#f3f3f3",
     borderRadius: 30,
     flexDirection: "row",
@@ -158,5 +192,14 @@ const styles = StyleSheet.create({
   FTXStatusText: {
     fontSize: 10,
     paddingLeft: 10,
+  },
+  dashBalance: {
+    padding: 10,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  balance: {
+    marginRight: 2,
+    fontSize: 15,
   },
 });

@@ -1,4 +1,3 @@
-import { useNavigation } from "@react-navigation/core";
 import React, { useContext, useState, useEffect } from "react";
 import { Alert, View } from "react-native";
 import Loader from "../components/Loader";
@@ -11,6 +10,12 @@ export default function useAuth() {
 export function AuthProvider({ children, navigation }) {
   const [currentUser, setCurrentUser] = useState();
   const [loading, setLoading] = useState(true);
+  const [balance, setBalance] = useState({
+    btc: null,
+    eth: null,
+    wbtc: null,
+    usdt: null,
+  });
   const logIn = async (email, password) => {
     try {
       await SecureStore.setItemAsync("USER_EMAIL", email);
@@ -102,19 +107,18 @@ export function AuthProvider({ children, navigation }) {
     await auth.signOut();
   };
   const transfer = async (amount, token) => {
-    if (amount > currentUser.balance[token])
-      throw { message: "Saldo insuficiente" };
+    if (amount > balance[token]) throw { message: "Saldo insuficiente" };
     if (amount <= 0) throw { message: "Numero invalido" };
     try {
-      const doc = await firestore
-        .collection("users")
-        .doc(currentUser.user.uid)
-        .update({
-          balance: {
-            ...currentUser.balance,
-            [token]: currentUser.balance[token] - amount,
-          },
-        });
+      // const doc = await firestore
+      //   .collection("users")
+      //   .doc(currentUser.user.uid)
+      //   .update({
+      //     balance: {
+      //       ...currentUser.balance,
+      //       [token]: currentUser.balance[token] - amount,
+      //     },
+      //   });
       await updateProfile();
     } catch (err) {
       throw err;
@@ -170,6 +174,8 @@ export function AuthProvider({ children, navigation }) {
     updateProfile,
     createWallet,
     transfer,
+    balance,
+    setBalance,
   };
   return (
     <AuthContext.Provider value={value}>

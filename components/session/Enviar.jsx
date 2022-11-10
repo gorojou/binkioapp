@@ -4,8 +4,6 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Dimensions,
-  Alert,
-  Image,
   TouchableOpacity,
   ScrollView,
 } from "react-native";
@@ -18,12 +16,13 @@ import Navbar from "./Navbar";
 import CrediCard from "../../assets/svg/credit_card.svg";
 import Swap from "../../assets/svg/swap.svg";
 import SelectToken from "./SelectToken";
+import { useBlockChainContext } from "../../context/BlockchainContext";
 export default function Enviar({ navigation }) {
-  const { currentUser, transfer } = useAuth();
+  const { currentUser, balance, transfer } = useAuth();
+  const { token } = useBlockChainContext();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [amount, setAmount] = useState();
-  const [activo, setActivo] = useState("btc");
   const [tipo, setTipo] = useState("");
   const solicitar = async () => {
     if (!amount) return setErr("Numero invalido");
@@ -32,7 +31,7 @@ export default function Enviar({ navigation }) {
       return setErr("Excede lo necesario");
     try {
       setLoading(true);
-      const transaction = await transfer(amount, activo);
+      const transaction = await transfer(amount, token);
     } catch (err) {
       setErr(err.message);
       setLoading(false);
@@ -57,7 +56,7 @@ export default function Enviar({ navigation }) {
             <RText style={styles.titulo} tipo={"thin"}>
               Red
             </RText>
-            <SelectToken token={activo} setToken={setActivo} />
+            <SelectToken />
             <RText style={styles.titulo} tipo={"thin"}>
               Tipo
             </RText>
@@ -91,7 +90,9 @@ export default function Enviar({ navigation }) {
               <RText style={styles.balance} tipo={"thin"}>
                 Tu balance actual
               </RText>
-              <RText style={styles.balanceNum}>0.00</RText>
+              <RText style={styles.balanceNum}>
+                {balance[token] !== null ? balance[token] : "-.--"}
+              </RText>
             </View>
             <KeyboardAvoidingView>
               <View style={styles.intputContainer}>
