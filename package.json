@@ -11,6 +11,8 @@
   "dependencies": {
     "@ethersproject/shims": "^5.7.0",
     "@expo-google-fonts/roboto": "^0.2.2",
+    "@react-native-async-storage/async-storage": "~1.17.3",
+    "@react-native-community/blur": "^4.3.0",
     "@react-navigation/native": "^6.0.13",
     "@react-navigation/native-stack": "^6.9.1",
     "@svgr/core": "^6.5.0",
@@ -29,12 +31,14 @@
     "ethers": "^5.7.2",
     "events": "^1.0.0",
     "expo": "~46.0.16",
+    "expo-camera": "~12.3.0",
     "expo-clipboard": "~3.1.0",
     "expo-font": "~10.2.0",
     "expo-image-picker": "~13.3.1",
     "expo-linear-gradient": "~11.4.0",
+    "expo-secure-store": "~11.3.0",
     "expo-status-bar": "~1.4.0",
-    "expo-updates": "~0.14.6",
+    "expo-updates": "~0.14.7",
     "firebase": "^9.6.11",
     "https-browserify": "~0.0.0",
     "path-browserify": "0.0.0",
@@ -65,9 +69,7 @@
     "unorm": "^1.6.0",
     "url": "~0.10.1",
     "util": "~0.10.3",
-    "vm-browserify": "0.0.4",
-    "@react-native-async-storage/async-storage": "~1.17.3",
-    "expo-secure-store": "~11.3.0"
+    "vm-browserify": "0.0.4"
   },
   "devDependencies": {
     "@babel/core": "^7.18.6"

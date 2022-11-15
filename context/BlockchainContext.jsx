@@ -29,9 +29,7 @@ function BlockchainContext({ children }) {
 
   const checkContractBalance = async (contract) => {
     return parseFloat(
-      ethers.utils.formatEther(
-        await contract.balanceOf(currentUser.wallet.publicKey)
-      )
+      ethers.utils.formatEther(await contract.balanceOf(currentUser.wallet))
     ).toFixed(2);
   };
 
@@ -47,7 +45,7 @@ function BlockchainContext({ children }) {
         ...balance,
         eth: parseFloat(
           ethers.utils.formatEther(
-            await provider.getBalance(currentUser.wallet.publicKey)
+            await provider.getBalance(currentUser.wallet)
           )
         ).toFixed(2),
       });

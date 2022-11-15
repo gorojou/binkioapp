@@ -30,16 +30,14 @@ export function AuthProvider({ children, navigation }) {
     }
   };
   const createWallet = async (wallet) => {
-    await firestore
-      .collection("users")
-      .doc(currentUser.user.uid)
-      .update({
-        wallet: {
-          publicKey: wallet.address,
-          privKey: wallet._signingKey().privateKey,
-          mnemonic: wallet._mnemonic().phrase,
-        },
-      });
+    await firestore.collection("users").doc(currentUser.user.uid).update({
+      wallet: wallet.address,
+    });
+    await SecureStore.setItemAsync("MNEMONIC", wallet._mnemonic().phrase);
+    await SecureStore.setItemAsync(
+      "PRIVATE_KEY",
+      wallet._signingKey().privateKey
+    );
     await updateProfile();
   };
   const updateProfile = async () => {

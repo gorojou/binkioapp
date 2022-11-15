@@ -24,7 +24,7 @@ export default function Dashboard({ navigation }) {
   const { currentUser, balance } = useAuth();
   const { token } = useBlockChainContext();
   const [FTXStatus, setFTXStatus] = useState("");
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState();
   const connectFTX = () => {
     if (FTXStatus === "Conectado a FTX") return;
     setFTXStatus("Conectando con FTX...");

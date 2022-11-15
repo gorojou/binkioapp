@@ -30,9 +30,9 @@ export default function Recibir({ navigation }) {
             <SelectToken />
             {err && <RText style={s.errText}>{err}</RText>}
 
-            {currentUser.wallet.publicKey ? (
+            {currentUser.wallet ? (
               <>
-                <CopyToClipboard value={currentUser.wallet.publicKey} />
+                <CopyToClipboard value={currentUser.wallet} />
                 <Image
                   source={require("../../assets/qr.png")}
                   style={styles.qr}

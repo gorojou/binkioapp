@@ -1,12 +1,11 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import React from "react";
-
-export default function Popup({ children, setShow }) {
+export default function Popup({ children, setShow, closingValue }) {
   return (
     <>
       <TouchableOpacity
         style={styles.popUpContainer}
-        onPress={() => setShow(false)}
+        onPress={() => setShow && setShow(closingValue ? closingValue : false)}
       >
         <View
           style={styles.popup}
@@ -31,6 +30,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffffaa",
     justifyContent: "center",
     alignItems: "center",
+  },
+  absolute: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
   },
   popup: {
     width: "90%",

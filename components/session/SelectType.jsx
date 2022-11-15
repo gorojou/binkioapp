@@ -28,7 +28,7 @@ export default function SelectType() {
       <View style={styles.formularioContainer}>
         <View style={styles.formulario}>
           <RText style={styles.formTitle} tipo={"bold"}>
-            Ya casi
+            Tu eres...
           </RText>
           <RText style={styles.sessionTitle} tipo={"thin"}>
             !Selecciona la opcion acorde a ti!

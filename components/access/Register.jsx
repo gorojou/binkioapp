@@ -69,6 +69,7 @@ export default function Register({ navigation }) {
             value={form.nombre}
             onChangeText={(value) =>
               setForm((prev) => {
+                if (value.length > 8) return { ...prev };
                 return { ...prev, nombre: value };
               })
             }

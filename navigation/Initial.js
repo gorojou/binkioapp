@@ -14,6 +14,7 @@ import Enviar from "../components/session/Enviar";
 import Garantia from "../components/session/Garantia";
 import Recibir from "../components/session/Recibir";
 import BlockchainContext from "../context/BlockchainContext";
+import KYC from "../components/session/KYC";
 const Stack = createNativeStackNavigator();
 
 const MyStack = () => {
@@ -34,26 +35,37 @@ const MyStack = () => {
               <>
                 {currentUser.type ? (
                   <>
-                    {currentUser.wallet ? (
+                    {currentUser.verified ? (
                       <>
-                        <Stack.Screen name="dash" component={Dashboard} />
-                        <Stack.Screen name="profile" component={Profile} />
-                        <Stack.Screen name="wallet" component={Wallet} />
-                        <Stack.Screen
-                          name="solicitud"
-                          component={SolicitudCredito}
-                        />
-                        <Stack.Screen name="enviar" component={Enviar} />
-                        <Stack.Screen name="garantia" component={Garantia} />
-                        <Stack.Screen name="recibir" component={Recibir} />
+                        {currentUser.wallet ? (
+                          <>
+                            <Stack.Screen name="dash" component={Dashboard} />
+                            <Stack.Screen name="profile" component={Profile} />
+                            <Stack.Screen name="wallet" component={Wallet} />
+                            <Stack.Screen
+                              name="solicitud"
+                              component={SolicitudCredito}
+                            />
+                            <Stack.Screen name="enviar" component={Enviar} />
+                            <Stack.Screen
+                              name="garantia"
+                              component={Garantia}
+                            />
+                            <Stack.Screen name="recibir" component={Recibir} />
+                          </>
+                        ) : (
+                          <>
+                            <Stack.Screen
+                              name="createWallet"
+                              component={Wallet}
+                              options={{ showNav: true }}
+                            />
+                          </>
+                        )}
                       </>
                     ) : (
                       <>
-                        <Stack.Screen
-                          name="createWallet"
-                          component={Wallet}
-                          options={{ showNav: true }}
-                        />
+                        <Stack.Screen name="kyc" component={KYC} />
                       </>
                     )}
                   </>
