@@ -146,7 +146,7 @@ export function AuthProvider({ children, navigation }) {
           setLoading(false);
         } catch (err) {
           logOut();
-          Alert.alert("Algo salio mal");
+          Alert.alert("Algo salio mal, intente nuevamente");
         }
         setLoading(false);
       } else {

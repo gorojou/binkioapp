@@ -1,4 +1,4 @@
-import { View, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Image, Alert } from "react-native";
 import React, { useState, useEffect } from "react";
 import RText from "../RText";
 import Loader from "../Loader";
@@ -148,12 +148,21 @@ export default function KYC() {
 const Document = ({ setShow, images, setImages }) => {
   const [loading, setLoading] = useState(false);
   const pickImage = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (permission.granted === false)
+      Alert.alert(
+        "Acceso a libreria denegado, para continuar por favor acepta el acceso a la galeria"
+      );
+
+    console.log(permission);
     let result = await ImagePicker.launchCameraAsync({
+      base64: false,
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [3, 2],
       quality: 1,
     });
+    console.log(result);
     if (!result.cancelled) {
       console.log(result.uri);
       setImages({ ...images, document: result.uri });
@@ -200,7 +209,13 @@ const SelfieImage = ({ setShow, images, setImages }) => {
   const [loading, setLoading] = useState(false);
 
   const pickImage = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (permission.granted === false)
+      Alert.alert(
+        "Acceso a libreria denegado, para continuar por favor acepta el acceso a la galeria"
+      );
     let result = await ImagePicker.launchCameraAsync({
+      base64: false,
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
