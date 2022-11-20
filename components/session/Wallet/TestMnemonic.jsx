@@ -2,10 +2,21 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
 import RText from "../../RText";
 import MainButton, { SecondaryButton } from "../../buttons";
-export default function TestMnemonic({ mnemonic, setDone, setdisplayTest }) {
+import Loader from "../../Loader";
+import useAuth from "../../../context/AuthContext";
+import s from "../../styles";
+export default function TestMnemonic({
+  mnemonic,
+  setdisplayTest,
+  nombre,
+  wallet,
+}) {
   const [constructedPhrase, setConstructedPhrase] = useState([]);
   const [randomPhrase, setRandomPhrase] = useState([]);
   const [correct, setCorrect] = useState(false);
+  const [err, setErr] = useState();
+  const [loading, setLoading] = useState(false);
+  const { createWallet } = useAuth();
   useEffect(() => {
     setRandomPhrase(shuffle(mnemonic.split(" ")));
   }, []);
@@ -32,11 +43,24 @@ export default function TestMnemonic({ mnemonic, setDone, setdisplayTest }) {
     }
     return array;
   }
+  const saveWallet = async (wallet, name) => {
+    try {
+      setLoading(true);
+      await createWallet(wallet, name);
+    } catch (err) {
+      console.log(err);
+      setLoading(false);
+      setErr(err.message);
+    }
+  };
   return (
     <>
       <RText style={{ ...styles.formTitle, marginBottom: 20 }}>
         Ingresa las palabras en orden de tu frase secreta
       </RText>
+      {err && (
+        <RText style={{ ...s.errText, textAlign: "center" }}>{err}</RText>
+      )}
       <Selected selected={constructedPhrase} />
       <View style={styles.wordContainer}>
         {randomPhrase.map((word, i) => {
@@ -54,10 +78,11 @@ export default function TestMnemonic({ mnemonic, setDone, setdisplayTest }) {
         Volver a ver la frase
       </SecondaryButton>
       {correct && (
-        <MainButton width={0.8} callback={() => setDone(true)}>
+        <MainButton width={0.8} callback={() => saveWallet(wallet, nombre)}>
           Guardar Wallet
         </MainButton>
       )}
+      {loading && <Loader size={100} />}
     </>
   );
 }
@@ -112,22 +137,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#f3f3f3",
     justifyContent: "center",
     alignItems: "center",
-    width: "90%",
+    minWidth: 200,
     marginBottom: 20,
   },
   wordContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "space-evenly",
   },
   word: {
     justifyContent: "center",
     alignItems: "center",
     padding: 15,
-    margin: 5,
+    marginVertical: 5,
     borderRadius: 10,
-    width: "25%",
+    width: "29%",
   },
   selected: {
     backgroundColor: "white",

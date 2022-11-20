@@ -10,13 +10,14 @@ import firebase, { storage, firestore } from "../../firebase";
 import s from "../styles";
 import Popup from "./Popup";
 import * as ImagePicker from "expo-image-picker";
-
+import LoaderProgress from "../LoaderProgress";
 export default function KYC() {
   const [loading, setLoading] = useState(false);
   const { currentUser, uploadPfp, updateProfile } = useAuth();
   const [err, setErr] = useState("");
   const [images, setImages] = useState({ document: "", selfie: "" });
   const [show, setShow] = useState();
+  const [progress, setProgress] = useState(0);
   const processImage = async (image) => {
     return await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -33,19 +34,29 @@ export default function KYC() {
     });
   };
   const uploadImage = async (blob, type, last) => {
-    const uploadTask = await storage
+    const uploadTask = storage
       .ref(`/users/${currentUser.user.uid}/${type}/${currentUser.user.uid}`)
       .put(blob);
-    const update = {
-      [type]: await uploadTask.ref.getDownloadURL(),
-    };
-    if (last) update.verified = true;
-    console.log("Aguanile");
-    await firestore
-      .collection("users")
-      .doc(currentUser.user.uid)
-      .update(update);
-    blob.close();
+    uploadTask.on("state_changed", (task) => {
+      setProgress(
+        Math.round(
+          last
+            ? 50 + (task.bytesTransferred / task.totalBytes) * 50
+            : (task.bytesTransferred / task.totalBytes) * 50
+        )
+      );
+    });
+    await uploadTask.then(async (doc) => {
+      const update = {
+        [type]: await doc.ref.getDownloadURL(),
+      };
+      if (last) update.verified = true;
+      await firestore
+        .collection("users")
+        .doc(currentUser.user.uid)
+        .update(update);
+      blob.close();
+    });
   };
   const sendImages = async () => {
     try {
@@ -124,7 +135,7 @@ export default function KYC() {
               </MainButton>
             </>
           )}
-          {loading && <Loader size={100} />}
+          {loading && <LoaderProgress progress={progress} />}
         </View>
       </View>
       {show && (

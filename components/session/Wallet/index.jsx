@@ -8,87 +8,40 @@ import CopyToClipboard from "../../CopyToClipboard";
 import useAuth from "../../../context/AuthContext";
 import s from "../../styles";
 import * as SecureStore from "expo-secure-store";
-import { useBlockChainContext } from "../../../context/BlockchainContext";
-import Eye from "../../../assets/svg/eyeHidden.svg";
-import TestMnemonic from "./TestMnemonic";
+import WalletList from "./WalletList";
 export default function Wallet({ navigation, route }) {
-  const { currentUser, createWallet } = useAuth();
-  const { createRandomWallet } = useBlockChainContext();
-  const [wallet, setWallet] = useState();
+  const { currentUser, createWallet, wallets, mainWallet } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [show, setShow] = useState(false);
-  const [err, setErr] = useState("");
-  const [done, setDone] = useState(false);
-
-  //Cambiar esto luego
-  useEffect(() => {
-    if (done) saveWallet(wallet);
-  }, [done]);
-  const createUserWallet = async () => {
-    setLoading(true);
-    const wallet = await createRandomWallet();
-    setWallet(wallet);
-    setLoading(false);
-  };
-  const saveWallet = async (wallet) => {
-    try {
-      setLoading(true);
-      await createWallet(wallet);
-    } catch (err) {}
-    setLoading(false);
-    setErr(err.message);
-  };
+  const [showWallet, setShowWallet] = useState();
 
   return (
     <>
       <View style={styles.formulario}>
         <View style={{ width: "90%", alignItems: "center" }}>
-          {!currentUser.wallet ? (
-            <>
-              {wallet ? (
-                <>
-                  <CheckNewWallet
-                    mnemonic={wallet._mnemonic().phrase}
-                    setDone={setDone}
-                  />
-                </>
-              ) : (
-                <>
-                  <RText style={{ ...styles.formTitle, marginTop: 20 }}>
-                    ¡Crea una nueva wallet!
-                  </RText>
-                  <RText style={styles.sessionTitle} tipo={"thin"}>
-                    Guarda todos los datos de tu wallet en un lugar seguro
-                  </RText>
-                  <MainButton callback={() => createUserWallet()} width={1}>
-                    Generar Wallet
-                  </MainButton>
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              <RText style={{ ...styles.formTitle, marginTop: 20 }}>
-                Tu Wallet
-              </RText>
-              <RText style={styles.sessionTitle} tipo={"thin"}>
-                Tu wallet es asignada al crear una cuenta
-              </RText>
-              <CopyToClipboard value={currentUser.wallet} />
-              <SecondaryButton callback={() => setShow(true)}>
-                Ver Datos privados
-              </SecondaryButton>
-            </>
-          )}
+          <RText style={{ ...styles.formTitle, marginTop: 20 }}>
+            Tu Wallet
+          </RText>
+          <RText style={styles.sessionTitle} tipo={"thin"}>
+            Tu wallet es asignada al crear una cuenta
+          </RText>
+          <View style={{ width: "90%" }}>
+            <CopyToClipboard value={mainWallet.wallet} />
+          </View>
+          <WalletList setShowWallet={setShowWallet} walletSection={true} />
           {loading && <Loader size={100} />}
         </View>
-        {show && <PopUpMnemonic setShow={setShow} />}
+        {showWallet && (
+          <PopUpMnemonic
+            setShowWallet={setShowWallet}
+            showWallet={showWallet}
+          />
+        )}
       </View>
-      {route.name === "wallet" && <Navbar navigation={navigation} />}
+      <Navbar navigation={navigation} />
     </>
   );
 }
-const PopUpMnemonic = ({ setShow }) => {
+const PopUpMnemonic = ({ setShowWallet, showWallet }) => {
   const [confirm, setConfirm] = useState(false);
   const [passConfirmed, setPassConfirmed] = useState(false);
   const [pass, setPass] = useState();
@@ -103,11 +56,16 @@ const PopUpMnemonic = ({ setShow }) => {
     setLoading(true);
     const storedPass = await SecureStore.getItemAsync("USER_PASS");
     if (storedPass === pass) {
-      const mnemonic = await SecureStore.getItemAsync("MNEMONIC");
-      const privKey = await SecureStore.getItemAsync("PRIVATE_KEY");
+      const storedWallets = JSON.parse(
+        await SecureStore.getItemAsync("wallets")
+      );
+
+      const selectedWallet = storedWallets.filter((wallet) => {
+        return wallet.pub == showWallet.wallet;
+      });
       setData({
-        mnemonic: mnemonic,
-        privKey: privKey,
+        mnemonic: selectedWallet[0].m,
+        privKey: selectedWallet[0].priv,
       });
       setLoading(false);
       return setPassConfirmed(true);
@@ -119,7 +77,7 @@ const PopUpMnemonic = ({ setShow }) => {
     <>
       <TouchableOpacity
         style={styles.popUpContainer}
-        onPress={() => setShow(false)}
+        onPress={() => setShowWallet()}
       >
         <View
           style={styles.popup}
@@ -136,11 +94,19 @@ const PopUpMnemonic = ({ setShow }) => {
                     Los datos de tu wallet
                   </RText>
                   <View></View>
-                  <RText style={{ textAlign: "center" }}>Frase mnemonic</RText>
-                  <CopyToClipboard value={data.mnemonic} />
-                  <RText style={{ textAlign: "center" }}>Llave Privada</RText>
+                  {data.mnemonic && (
+                    <>
+                      <RText style={{ textAlign: "center", marginTop: 10 }}>
+                        Frase mnemonic
+                      </RText>
+                      <CopyToClipboard value={data.mnemonic} />
+                    </>
+                  )}
+                  <RText style={{ textAlign: "center", marginTop: 10 }}>
+                    Llave Privada
+                  </RText>
                   <CopyToClipboard value={data.privKey} />
-                  <MainButton width={0.8} callback={() => setShow(false)}>
+                  <MainButton width={0.8} callback={() => setShowWallet()}>
                     Volver
                   </MainButton>
                 </>
@@ -184,7 +150,7 @@ const PopUpMnemonic = ({ setShow }) => {
               <SecondaryButton width={0.8} callback={() => setConfirm(true)}>
                 Ver Datos
               </SecondaryButton>
-              <MainButton width={0.8} callback={() => setShow(false)}>
+              <MainButton width={0.8} callback={() => setShowWallet()}>
                 Cancelar
               </MainButton>
             </>
@@ -192,55 +158,6 @@ const PopUpMnemonic = ({ setShow }) => {
           {loading && <Loader size={100} />}
         </View>
       </TouchableOpacity>
-    </>
-  );
-};
-const CheckNewWallet = ({ mnemonic, setDone }) => {
-  const [hide, setHide] = useState(true);
-  const [displayTest, setdisplayTest] = useState(false);
-
-  return (
-    <>
-      {displayTest ? (
-        <>
-          <TestMnemonic
-            setdisplayTest={setdisplayTest}
-            mnemonic={mnemonic}
-            setDone={setDone}
-          />
-        </>
-      ) : (
-        <>
-          <RText style={{ ...styles.formTitle, marginTop: 20 }}>
-            Guarda tu nueva wallet
-          </RText>
-          <RText
-            style={{
-              ...styles.sessionTitle,
-              textAlign: "center",
-              marginBottom: 20,
-            }}
-            tipo={"thin"}
-          >
-            Por favor almacena la informacion de tu wallet en un lugar seguro
-          </RText>
-          <SecondaryButton width={1} callback={() => setHide(!hide)}>
-            {hide ? "Ver Frase Secreta" : "Esconder Frase Secreta"}
-          </SecondaryButton>
-          <View style={styles.walletPreview}>
-            <RText>Mnemonic</RText>
-            <CopyToClipboard value={mnemonic} />
-            {hide && (
-              <View style={styles.hideMnemonic}>
-                <Eye fill={"black"} />
-              </View>
-            )}
-          </View>
-          <MainButton callback={() => setdisplayTest(true)} width={1}>
-            Siguiente
-          </MainButton>
-        </>
-      )}
     </>
   );
 };
@@ -379,6 +296,7 @@ const styles = StyleSheet.create({
   walletPreview: {
     position: "relative",
     marginTop: 20,
+    padding: 5,
   },
   hideMnemonic: {
     position: "absolute",
@@ -390,5 +308,17 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
+  },
+  intputContainer: {
+    flexDirection: "row",
+    marginTop: 10,
+    width: "100%",
+  },
+  input: {
+    backgroundColor: "#f3f3f3",
+    flex: 1,
+    padding: 10,
+    borderRadius: 20,
+    textAlign: "center",
   },
 });

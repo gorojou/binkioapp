@@ -1,8 +1,10 @@
 import React, { useContext, useState, useEffect } from "react";
 import { Alert, View } from "react-native";
 import Loader from "../components/Loader";
+import { runTransaction } from "firebase/firestore";
 import firebase, { auth, firestore, storage } from "../firebase";
 import * as SecureStore from "expo-secure-store";
+import { ethers } from "ethers";
 const AuthContext = React.createContext();
 export default function useAuth() {
   return useContext(AuthContext);
@@ -16,6 +18,14 @@ export function AuthProvider({ children, navigation }) {
     wbtc: null,
     usdt: null,
   });
+  const [balanceTotal, setBalanceTotal] = useState({
+    btc: null,
+    eth: null,
+    wbtc: null,
+    usdt: null,
+  });
+  const [wallets, setWallets] = useState();
+  const [mainWallet, setMainWallet] = useState();
   const logIn = async (email, password) => {
     try {
       await SecureStore.setItemAsync("USER_EMAIL", email);
@@ -29,24 +39,145 @@ export function AuthProvider({ children, navigation }) {
       throw err;
     }
   };
-  const createWallet = async (wallet) => {
-    await firestore.collection("users").doc(currentUser.user.uid).update({
-      wallet: wallet.address,
-    });
-    await SecureStore.setItemAsync("MNEMONIC", wallet._mnemonic().phrase);
-    await SecureStore.setItemAsync(
-      "PRIVATE_KEY",
-      wallet._signingKey().privateKey
-    );
-    await updateProfile();
+  const createWallet = async (wallet, name) => {
+    try {
+      const savedWallets = JSON.parse(
+        await SecureStore.getItemAsync("wallets")
+      );
+      let newWallet = [
+        {
+          name: name,
+          pub: wallet.address,
+          m: wallet.imported ? "" : wallet._mnemonic().phrase,
+          priv: wallet.imported ? wallet.privKey : wallet._mnemonic().phrase,
+        },
+      ];
+      if (savedWallets) newWallet = [...newWallet, ...savedWallets];
+      await SecureStore.setItemAsync("wallets", JSON.stringify(newWallet));
+      await addNewWallet(wallet.address, name);
+      await updateProfile();
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
   };
-  const updateProfile = async () => {
-    setLoading(true);
+
+  const addNewWallet = async (wallet, name) => {
+    if (!ethers.utils.isAddress(wallet)) throw { message: "Wallet invalida" };
+    if (wallets && wallets.length > 5)
+      throw { message: "Ya tienes la cantidad maxima de wallets disponibles" };
+    const matchName = await firebase
+      .firestore()
+      .collection("users")
+      .doc(currentUser.user.uid)
+      .collection("wallets")
+      .where("name", "==", name)
+      .get();
+    const matchWallet = await firebase
+      .firestore()
+      .collection("users")
+      .doc(currentUser.user.uid)
+      .collection("wallets")
+      .where("wallet", "==", wallet)
+      .get();
+    const matchMain = await firebase
+      .firestore()
+      .collection("users")
+      .doc(currentUser.user.uid)
+      .collection("wallets")
+      .where("main", "==", true)
+      .get();
+
+    if (!matchName.empty) throw { message: "Nombre de Wallet ya existe" };
+    if (!matchWallet.empty) throw { message: "Wallet ya existe" };
+    await firebase
+      .firestore()
+      .collection("users")
+      .doc(currentUser.user.uid)
+      .collection("wallets")
+      .doc(wallet)
+      .set({
+        name: name,
+        wallet: wallet,
+        main: matchMain.empty,
+      })
+      .then(() => {
+        return true;
+      })
+      .catch((err) => {
+        throw err;
+      });
+  };
+
+  const deleteWallet = async (wallet) => {
+    var walletDocRef = firebase
+      .firestore()
+      .collection("users")
+      .doc(currentUser.user.uid)
+      .collection("wallets")
+      .doc(wallet);
+    try {
+      await walletDocRef.get().then(async (wallet) => {
+        console.log(wallet.data());
+        await walletDocRef.delete();
+        const storedWalletData = await SecureStore.getItemAsync("wallets");
+        if (storedWalletData) {
+          const newStoredWallets = JSON.parse(storedWalletData).filter(
+            (wallet) => wallet.wallet != wallet.data().wallet
+          );
+          console.log(newStoredWallets);
+          await SecureStore.setItemAsync(
+            "wallets",
+            JSON.stringify(newStoredWallets)
+          );
+        }
+        console.log(wallet.data());
+        if (!wallet.data().main) return updateProfile();
+        await firebase
+          .firestore()
+          .collection("users")
+          .doc(currentUser.uid)
+          .collection("wallets")
+          .where("main", "==", false)
+          .limit(1)
+          .get()
+          .then(async (newMainWallet) => {
+            if (newMainWallet.empty) return;
+            await newMainWallet.forEach(async (mainWallet) => {
+              await mainWallet.ref.update({ main: true });
+              setUserMainWallet(mainWallet.data());
+              updateProfile();
+            });
+          });
+      });
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  const updateProfile = async (silent) => {
+    if (!silent) setLoading(true);
     try {
       const userDoc = await firestore
         .collection("users")
         .doc(currentUser.user.uid)
         .get();
+      const userWallets = await firestore
+        .collection("users")
+        .doc(currentUser.user.uid)
+        .collection("wallets")
+        .orderBy("main", "desc")
+        .get();
+      if (!userWallets.empty) {
+        let arr = [];
+        let main;
+        await userWallets.forEach((doc) => {
+          if (doc.data().main) main = doc.data();
+          arr.push(doc.data());
+        });
+        setMainWallet(main);
+        setWallets(arr);
+      }
       setCurrentUser({ user: currentUser.user, ...userDoc.data() });
       setLoading(false);
     } catch (err) {
@@ -108,20 +239,50 @@ export function AuthProvider({ children, navigation }) {
     if (amount > balance[token]) throw { message: "Saldo insuficiente" };
     if (amount <= 0) throw { message: "Numero invalido" };
     try {
-      // const doc = await firestore
-      //   .collection("users")
-      //   .doc(currentUser.user.uid)
-      //   .update({
-      //     balance: {
-      //       ...currentUser.balance,
-      //       [token]: currentUser.balance[token] - amount,
-      //     },
-      //   });
       await updateProfile();
     } catch (err) {
       throw err;
     }
   };
+  const getWallet = async (wallet) => {
+    return await (
+      await firebase
+        .firestore()
+        .collection("users")
+        .doc(currentUser.user.uid)
+        .collection("wallets")
+        .doc(wallet)
+        .get()
+    ).data();
+  };
+
+  const setNewMainWallet = async (wallet) => {
+    var walletDocRef = firebase
+      .firestore()
+      .collection("users")
+      .doc(currentUser.user.uid)
+      .collection("wallets")
+      .doc(wallet);
+    var oldMainWalletRef = firebase
+      .firestore()
+      .collection("users")
+      .doc(currentUser.user.uid)
+      .collection("wallets")
+      .doc(mainWallet.wallet);
+    try {
+      await runTransaction(firebase.firestore(), async (transaction) => {
+        const newWalletDoc = await transaction.get(walletDocRef);
+        transaction.update(walletDocRef, { main: true });
+        transaction.update(oldMainWalletRef, { main: false });
+        setMainWallet(newWalletDoc.data());
+      });
+      await updateProfile(true);
+    } catch (err) {
+      console.log(err);
+      Alert.alert(err.message);
+    }
+  };
+
   const setStoredSession = async (user) => {
     const pass = await SecureStore.getItemAsync("USER_PASS");
     try {
@@ -136,12 +297,29 @@ export function AuthProvider({ children, navigation }) {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setLoading(true);
+      // await SecureStore.deleteItemAsync("wallets", {});
       if (user) {
         try {
           const userDoc = await firestore
             .collection("users")
             .doc(user.uid)
             .get();
+          const userWallets = await firestore
+            .collection("users")
+            .doc(user.uid)
+            .collection("wallets")
+            .orderBy("main", "desc")
+            .get();
+          if (!userWallets.empty) {
+            let arr = [];
+            let main;
+            await userWallets.forEach((doc) => {
+              if (doc.data().main) main = doc.data();
+              arr.push(doc.data());
+            });
+            setMainWallet(main);
+            setWallets(arr);
+          }
           setCurrentUser({ user: user, ...userDoc.data() });
           setLoading(false);
         } catch (err) {
@@ -156,7 +334,6 @@ export function AuthProvider({ children, navigation }) {
         } else {
           setCurrentUser(user);
           setLoading(false);
-          console.log(user);
         }
       }
     });
@@ -173,7 +350,13 @@ export function AuthProvider({ children, navigation }) {
     createWallet,
     transfer,
     balance,
+    wallets,
+    mainWallet,
     setBalance,
+    setNewMainWallet,
+    setBalanceTotal,
+    balanceTotal,
+    deleteWallet,
   };
   return (
     <AuthContext.Provider value={value}>

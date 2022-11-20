@@ -11,7 +11,6 @@ import * as Clipboard from "expo-clipboard";
 export default function CopyToClipboard({ value }) {
   return (
     <View style={styles.walletContainer}>
-      <RText style={styles.wallet}>{value}</RText>
       <TouchableOpacity
         onPress={() => {
           Alert.alert("Copiado");
@@ -20,6 +19,7 @@ export default function CopyToClipboard({ value }) {
       >
         <Copy height={30} width={30} fill={"black"} />
       </TouchableOpacity>
+      <RText style={styles.wallet}>{value}</RText>
     </View>
   );
 }
@@ -27,8 +27,8 @@ const styles = StyleSheet.create({
   walletContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    marginVertical: 10,
+    justifyContent: "space-between",
+    marginTop: 10,
     width: "100%",
   },
   wallet: {

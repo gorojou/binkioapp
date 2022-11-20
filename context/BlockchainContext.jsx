@@ -7,7 +7,15 @@ export function useBlockChainContext() {
   return useContext(BCContext);
 }
 function BlockchainContext({ children }) {
-  const { currentUser, balance, setBalance } = useAuth();
+  const {
+    currentUser,
+    balance,
+    setBalance,
+    mainWallet,
+    wallets,
+    setBalanceTotal,
+    balanceTotal,
+  } = useAuth();
   const tokenObject = {
     eth: {
       type: "eth",
@@ -23,13 +31,12 @@ function BlockchainContext({ children }) {
     },
   };
   const [provider, setProvider] = useState();
-  const urlProvider =
-    "https://mainnet.infura.io/v3/04bfa7d48b3e4d0e87bf5c8c7e15b4c3";
-  const [token, setToken] = useState("btc");
+  const urlProvider = "https://data-seed-prebsc-1-s1.binance.org:8545";
+  const [token, setToken] = useState("eth");
 
-  const checkContractBalance = async (contract) => {
+  const checkContractBalance = async (contract, wallet) => {
     return parseFloat(
-      ethers.utils.formatEther(await contract.balanceOf(currentUser.wallet))
+      ethers.utils.formatEther(await contract.balanceOf(wallet))
     ).toFixed(2);
   };
 
@@ -37,24 +44,26 @@ function BlockchainContext({ children }) {
     return await new ethers.Contract(tokenAddress, tokenAbi, provider);
   };
 
-  const checkBalance = async () => {
-    if (!provider || token === "btc" || token === "usdt") return;
+  const checkBalance = async (wallet, returns) => {
     setBalance({ ...balance, [token]: "Cargando" });
-    if (token === "eth")
+    if (returns) setBalanceTotal({ ...balanceTotal, [token]: "Cargando" });
+    if (token === "eth") {
+      const res = parseFloat(
+        ethers.utils.formatEther(await provider.getBalance(wallet))
+      ).toFixed(2);
+      if (returns) return await res;
       setBalance({
         ...balance,
-        eth: parseFloat(
-          ethers.utils.formatEther(
-            await provider.getBalance(currentUser.wallet)
-          )
-        ).toFixed(2),
+        eth: res,
       });
+    }
     if (token === "wbtc") {
       const contract = await createContractInstance(
         tokenObject[token].token,
         wbtcAbi
       );
-      const contractBalance = await checkContractBalance(contract);
+      const contractBalance = await checkContractBalance(contract, wallet);
+      if (returns) return await contractBalance;
       setBalance({ ...balance, wbtc: await contractBalance });
     }
   };
@@ -63,12 +72,47 @@ function BlockchainContext({ children }) {
     return await ethers.Wallet.createRandom();
   };
 
-  useEffect(() => {
-    if (currentUser && balance[token] === null) {
-      checkBalance();
-    }
-  }, [token]);
+  const addBalances = async () => {
+    let res = 0;
+    await Promise.all(
+      wallets.map(async (wallet) => {
+        const balanceNum = await checkBalance(wallet.wallet, true);
+        res = parseFloat(res) + parseFloat(balanceNum);
+        console.log(balanceNum);
+      })
+    );
+    return res.toFixed(2);
+  };
 
+  useEffect(() => {
+    const app = async () => {
+      if (!provider || token === "btc" || token === "usdt" || token === "wbtc")
+        return;
+      if (currentUser && balance[token] === null) {
+        checkBalance(mainWallet.wallet);
+        // console.log(await addBalances());
+        setBalanceTotal({
+          ...balanceTotal,
+          [token]: await addBalances(),
+        });
+      }
+    };
+    app();
+  }, [token, provider]);
+  useEffect(() => {
+    const app = async () => {
+      if (
+        !provider ||
+        token === "btc" ||
+        token === "usdt" ||
+        token === "wbtc"
+      ) {
+        return;
+      }
+      await checkBalance(mainWallet.wallet);
+    };
+    app();
+  }, [mainWallet]);
   useEffect(() => {
     const app = async () => {
       if (!provider) {

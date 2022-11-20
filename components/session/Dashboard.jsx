@@ -14,14 +14,14 @@ import send from "../../assets/send.png";
 import data from "../../assets/data.png";
 import download from "../../assets/download.png";
 import PfpImage from "./PfpImage";
-import ftx from "../../assets/ftx.png";
 import CurrentTokenSvg from "./CurrentTokenSvg";
 import { useBlockChainContext } from "../../context/BlockchainContext";
 import Popup from "./Popup";
 import SelectToken from "./SelectToken";
 import MainButton from "../buttons";
+import MainWalletButton from "./Wallet/MainWalletButton";
 export default function Dashboard({ navigation }) {
-  const { currentUser, balance } = useAuth();
+  const { currentUser, balance, balanceTotal } = useAuth();
   const { token } = useBlockChainContext();
   const [FTXStatus, setFTXStatus] = useState("");
   const [show, setShow] = useState();
@@ -40,33 +40,22 @@ export default function Dashboard({ navigation }) {
             <RText style={styles.titulo}>
               ¡Hola <RText tipo={"bold"}>{currentUser.nombre}</RText>!
             </RText>
-            <TouchableOpacity style={styles.ftxConection} onPress={connectFTX}>
-              <Image source={ftx} style={{ height: 25, width: 30 }} />
-
-              {FTXStatus ? (
-                <>
-                  {FTXStatus == "Conectado a FTX" ? (
-                    <RText style={{ ...styles.FTXStatusText, color: "green" }}>
-                      {FTXStatus}
-                    </RText>
-                  ) : (
-                    <RText style={styles.FTXStatusText}>
-                      Conectando Con FTX...
-                    </RText>
-                  )}
-                </>
-              ) : (
-                <RText style={styles.FTXStatusText}>
-                  Presiona para conectar con FTX
-                </RText>
-              )}
+            <TouchableOpacity
+              style={{ ...styles.dashBalance, paddingBottom: 0 }}
+              onPress={() => setShow(true)}
+            >
+              <RText style={styles.balance}>
+                Balance: {balance[token] === null ? "-.--" : balance[token]}
+              </RText>
+              <CurrentTokenSvg height={20} width={20} />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.dashBalance}
               onPress={() => setShow(true)}
             >
-              <RText style={styles.balance}>
-                Balance: {balance[token] === null ? "-.--" : balance[token]}
+              <RText style={styles.balance} tipo={"thin"}>
+                Balance Total:{" "}
+                {balanceTotal[token] === null ? "-.--" : balanceTotal[token]}
               </RText>
               <CurrentTokenSvg height={20} width={20} />
             </TouchableOpacity>
@@ -76,6 +65,7 @@ export default function Dashboard({ navigation }) {
           </View>
         </View>
 
+        <MainWalletButton width={0.9} />
         <View style={styles.body}>
           <Activities
             navigation={navigation}
@@ -194,7 +184,7 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
   },
   dashBalance: {
-    padding: 10,
+    padding: 5,
     flexDirection: "row",
     alignItems: "center",
   },

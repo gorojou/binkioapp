@@ -15,14 +15,14 @@ import Navbar from "./Navbar";
 import SelectToken from "./SelectToken";
 import { useBlockChainContext } from "../../context/BlockchainContext";
 export default function SolicitudCredito({ navigation }) {
-  const { currentUser, balance, transfer } = useAuth();
+  const { currentUser, balanceTotal, transfer } = useAuth();
   const { token } = useBlockChainContext();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [amount, setAmount] = useState();
   const solicitar = async () => {
     if (!amount) return setErr("Numero invalido");
-    if (amount > balance[token]) return setErr("Solicitud muy alta");
+    if (amount > balanceTotal[token]) return setErr("Solicitud muy alta");
     try {
       setLoading(true);
       setTimeout(() => {
@@ -53,10 +53,10 @@ export default function SolicitudCredito({ navigation }) {
             <SelectToken />
             <View style={styles.balanceContainer}>
               <RText style={styles.balance} tipo={"thin"}>
-                Tu balance actual
+                Tu balance total actual
               </RText>
               <RText style={styles.balanceNum}>
-                {balance[token] !== null ? balance[token] : "-.--"}
+                {balanceTotal[token] !== null ? balanceTotal[token] : "-.--"}
               </RText>
             </View>
             <KeyboardAvoidingView>

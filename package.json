@@ -48,7 +48,7 @@
     "querystring-es3": "~0.2.0",
     "react": "18.0.0",
     "react-native": "0.69.6",
-    "react-native-bip39": "^2.3.0",
+    "react-native-bip32-utils": "^0.9.3",
     "react-native-cli": "^2.0.1",
     "react-native-get-random-values": "^1.8.0",
     "react-native-level-fs": "^3.0.0",

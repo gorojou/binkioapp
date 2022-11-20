@@ -1,6 +1,28 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import React from "react";
-export default function Popup({ children, setShow, closingValue }) {
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState, useContext } from "react";
+const PopupContext = React.createContext();
+export function usePopup() {
+  return useContext(PopupContext);
+}
+
+export default function PopupProvider({ children }) {
+  const [show, setShow] = useState();
+  const [component, setComponent] = useState(false);
+  const [closingValue, setClosingValue] = useState();
+  const value = { setComponent, setShow, setClosingValue };
+  return (
+    <PopupContext.Provider value={value}>
+      {children}
+      {show && (
+        <Popup setShow={setShow} closingValue={closingValue}>
+          {component}
+        </Popup>
+      )}
+    </PopupContext.Provider>
+  );
+}
+
+const Popup = ({ children, setShow, closingValue }) => {
   return (
     <>
       <TouchableOpacity
@@ -19,7 +41,7 @@ export default function Popup({ children, setShow, closingValue }) {
       </TouchableOpacity>
     </>
   );
-}
+};
 const styles = StyleSheet.create({
   popUpContainer: {
     position: "absolute",

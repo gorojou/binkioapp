@@ -16,15 +16,22 @@ import SelectToken from "./SelectToken";
 import { useBlockChainContext } from "../../context/BlockchainContext";
 export default function Garantia({ navigation }) {
   const { token } = useBlockChainContext();
-  const { currentUser, transfer, balance } = useAuth();
+  const { currentUser, transfer, balanceTotal } = useAuth();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [amount, setAmount] = useState();
   const solicitar = async () => {
     if (!amount) return setErr("Numero invalido");
+    if (amount > balanceTotal[token]) return setErr("Solicitud muy alta");
     try {
       setLoading(true);
-      const transaction = await transfer(amount, token);
+      // const transaction = await transfer(amount, token);
+      setLoading(true);
+      setTimeout(() => {
+        Alert.alert("Solicitud procesada");
+        setLoading(false);
+        navigation.navigate("dash");
+      }, 3000);
     } catch (err) {
       setErr(err.message);
       setLoading(false);
@@ -51,7 +58,7 @@ export default function Garantia({ navigation }) {
                 Tu balance actual
               </RText>
               <RText style={styles.balanceNum}>
-                {balance[token] !== null ? balance[token] : "-.--"}
+                {balanceTotal[token] !== null ? balanceTotal[token] : "-.--"}
               </RText>
             </View>
             <KeyboardAvoidingView>
@@ -71,11 +78,11 @@ export default function Garantia({ navigation }) {
               <MainButton width={1} callback={() => solicitar()}>
                 Ofrecer
               </MainButton>
-              {loading && <Loader size={100} />}
             </KeyboardAvoidingView>
           </View>
         </View>
       </View>
+      {loading && <Loader size={100} />}
       <Navbar navigation={navigation} />
     </>
   );
