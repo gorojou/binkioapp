@@ -74,11 +74,19 @@ export default function TestMnemonic({
           );
         })}
       </View>
-      <SecondaryButton width={0.8} callback={() => setdisplayTest(false)}>
+      <SecondaryButton
+        style={{ marginTop: 20 }}
+        width={0.8}
+        callback={() => setdisplayTest(false)}
+      >
         Volver a ver la frase
       </SecondaryButton>
       {correct && (
-        <MainButton width={0.8} callback={() => saveWallet(wallet, nombre)}>
+        <MainButton
+          style={{ marginTop: 20 }}
+          width={0.8}
+          callback={() => saveWallet(wallet, nombre)}
+        >
           Guardar Wallet
         </MainButton>
       )}

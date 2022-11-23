@@ -66,9 +66,18 @@ export default function Login({ navigation }) {
             }
           />
         </View>
-        <MainButton width={1} callback={() => login()}>
-          Ingresa
-        </MainButton>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <RText>¿Olvidaste tu contraseña?</RText>
+          <MainButton callback={() => login()} fontSize={15}>
+            Ingresa
+          </MainButton>
+        </View>
         {loading && <Loader size={100} />}
       </KeyboardAvoidingView>
     </View>

@@ -6,12 +6,15 @@ import MainWalletButton, { SecondaryButton } from "../../buttons";
 import Star from "../../../assets/svg/star.svg";
 import Eye from "../../../assets/svg/eye.svg";
 import Delete from "../../../assets/svg/delete.svg";
-import SelectWallet from "./SelectWallet";
+import SelectToken from "../SelectToken";
 import OnRegister from "./OnRegister";
 import Loader from "../../Loader";
+import { useBlockChainContext } from "../../../context/BlockchainContext";
 import { usePopup } from "../../../context/Popup";
+import CurrentTokenSvg from "../CurrentTokenSvg";
 export default function WalletList({ setShowWallet, walletSection }) {
   const { wallets, setNewMainWallet, deleteWallet } = useAuth();
+  const { token } = useBlockChainContext();
   const [createWallet, setCreateWallet] = useState(false);
   const [loading, setLoading] = useState(false);
   const { setShow, setComponent, setClosingValue } = usePopup();
@@ -36,7 +39,11 @@ export default function WalletList({ setShowWallet, walletSection }) {
           postion: "relative",
         }}
       >
+        <View style={{ width: "90%", marginTop: 10 }}>
+          <SelectToken />
+        </View>
         <SecondaryButton
+          style={{ marginTop: 20 }}
           callback={() => {
             setShow(true);
             setComponent(<OnRegister confirmWallet={true} />);
@@ -55,7 +62,29 @@ export default function WalletList({ setShowWallet, walletSection }) {
                   { backgroundColor: i % 2 != 0 ? "white" : "#f3f3f3" },
                 ]}
               >
-                <RText style={styles.walletText}>{wallet.name}</RText>
+                <View
+                  style={{ justifyContent: "center", alignContent: "center" }}
+                >
+                  <RText style={styles.walletText}>{wallet.name}</RText>
+                  <RText style={styles.walletText} tipo={"thin"}>
+                    {wallet.balance ? (
+                      <>
+                        {parseFloat(wallet.balance[token]).toFixed(
+                          Math.max(
+                            2,
+                            (
+                              wallet.balance[token].toString().split(".")[1] ||
+                              []
+                            ).length
+                          )
+                        )}{" "}
+                        <CurrentTokenSvg width={15} height={15} />
+                      </>
+                    ) : (
+                      "Cargando"
+                    )}
+                  </RText>
+                </View>
                 <View style={{ flexDirection: "row" }}>
                   {walletSection && (
                     <>

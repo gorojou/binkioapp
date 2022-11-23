@@ -120,7 +120,11 @@ const CheckNewWallet = ({ mnemonic, wallet, confirmWallet }) => {
           {err && (
             <RText style={{ ...s.errText, textAlign: "center" }}>{err}</RText>
           )}
-          <SecondaryButton width={1} callback={() => setHide(!hide)}>
+          <SecondaryButton
+            style={{ marginTop: 20 }}
+            width={1}
+            callback={() => setHide(!hide)}
+          >
             {hide ? "Ver Frase Secreta" : "Esconder Frase Secreta"}
           </SecondaryButton>
           <RText
@@ -152,7 +156,11 @@ const CheckNewWallet = ({ mnemonic, wallet, confirmWallet }) => {
               </View>
             )}
           </View>
-          <MainButton callback={() => continueToTest()} width={1}>
+          <MainButton
+            style={{ marginTop: 20 }}
+            callback={() => continueToTest()}
+            width={1}
+          >
             Siguiente
           </MainButton>
           {loading && <Loader size={100} />}

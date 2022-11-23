@@ -75,7 +75,7 @@ export default function Profile({ navigation }) {
           </View>
         </TouchableOpacity>
         {image && (
-          <MainButton callback={uploadImageAsync}>
+          <MainButton style={{ marginTop: 20 }} callback={uploadImageAsync}>
             Cargar imagen de perfil
           </MainButton>
         )}
@@ -106,7 +106,11 @@ export default function Profile({ navigation }) {
             {currentUser.nacimiento.a}
           </RText>
         </View>
-        <SecondaryButton callback={logOut} width={0.8}>
+        <SecondaryButton
+          style={{ marginTop: 20 }}
+          callback={logOut}
+          width={0.8}
+        >
           Cerrar sesión
         </SecondaryButton>
       </View>

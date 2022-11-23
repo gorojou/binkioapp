@@ -6,6 +6,7 @@ import {
   Dimensions,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from "react-native";
 import React, { useState } from "react";
 import RText from "../RText";
@@ -18,7 +19,7 @@ import Swap from "../../assets/svg/swap.svg";
 import SelectToken from "./SelectToken";
 import { useBlockChainContext } from "../../context/BlockchainContext";
 export default function Enviar({ navigation }) {
-  const { currentUser, balance, transfer } = useAuth();
+  const { currentUser, balanceTotal, transfer, updateProfile } = useAuth();
   const { token } = useBlockChainContext();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
@@ -31,7 +32,14 @@ export default function Enviar({ navigation }) {
       return setErr("Excede lo necesario");
     try {
       setLoading(true);
-      const transaction = await transfer(amount, token);
+      const transaction = await transfer(
+        amount,
+        token,
+        "Transferencia",
+        "Prueba sistema historial"
+      );
+      Alert.alert("Transaccion realizada");
+      await updateProfile();
     } catch (err) {
       setErr(err.message);
       setLoading(false);
@@ -91,7 +99,7 @@ export default function Enviar({ navigation }) {
                 Tu balance actual
               </RText>
               <RText style={styles.balanceNum}>
-                {balance[token] !== null ? balance[token] : "-.--"}
+                {balanceTotal[token] ? balanceTotal[token] : "-.--"}
               </RText>
             </View>
             <KeyboardAvoidingView>
@@ -104,7 +112,11 @@ export default function Enviar({ navigation }) {
                   onChangeText={(value) => setAmount(value)}
                 />
               </View>
-              <MainButton width={1} callback={() => solicitar()}>
+              <MainButton
+                style={{ marginTop: 20 }}
+                width={1}
+                callback={() => solicitar()}
+              >
                 Enviar
               </MainButton>
             </KeyboardAvoidingView>

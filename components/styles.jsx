@@ -6,9 +6,8 @@ module.exports = StyleSheet.create({
     alignItems: "center",
     flex: 0.7,
     backgroundColor: "black",
-    padding: 15,
-    borderRadius: 40,
-    marginTop: 20,
+    padding: 12,
+    borderRadius: 15,
   },
   secondaryButton: {
     justifyContent: "center",
@@ -18,9 +17,8 @@ module.exports = StyleSheet.create({
     borderStyle: "solid",
     borderColor: "black",
     borderWidth: 1,
-    padding: 15,
-    borderRadius: 40,
-    marginTop: 20,
+    padding: 12,
+    borderRadius: 15,
   },
   intputContainer: {
     flexDirection: "row",

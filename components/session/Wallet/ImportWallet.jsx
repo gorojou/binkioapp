@@ -83,7 +83,11 @@ export default function ImportWallet({ navigation }) {
             <CopyToClipboard value={wallet.address} />
           </>
         )}
-        <MainButton width={1} callback={() => createNewWallet()}>
+        <MainButton
+          style={{ marginTop: 20 }}
+          width={1}
+          callback={() => createNewWallet()}
+        >
           Ingresa
         </MainButton>
         {loading && <Loader size={100} />}

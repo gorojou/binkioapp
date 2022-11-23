@@ -1,26 +1,42 @@
 import { TouchableOpacity, View } from "react-native";
 import RText from "./RText";
 import s from "./styles";
-export default MainButton = ({ style, children, width, callback }) => {
+export default MainButton = ({
+  style,
+  children,
+  width,
+  callback,
+  fontSize,
+}) => {
   return (
     <View style={{ flexDirection: "row", justifyContent: "center", ...style }}>
       <TouchableOpacity
         style={{ ...s.button, flex: width }}
         onPress={() => callback()}
       >
-        <RText style={{ color: "white", fontSize: 20 }}>{children}</RText>
+        <RText style={{ color: "white", fontSize: fontSize ? fontSize : 20 }}>
+          {children}
+        </RText>
       </TouchableOpacity>
     </View>
   );
 };
-export function SecondaryButton({ style, children, width, callback }) {
+export function SecondaryButton({
+  style,
+  children,
+  width,
+  callback,
+  fontSize,
+}) {
   return (
     <View style={{ flexDirection: "row", justifyContent: "center", ...style }}>
       <TouchableOpacity
         style={{ ...s.secondaryButton, flex: width }}
         onPress={() => callback()}
       >
-        <RText style={{ color: "black", fontSize: 20 }}>{children}</RText>
+        <RText style={{ color: "black", fontSize: fontSize ? fontSize : 20 }}>
+          {children}
+        </RText>
       </TouchableOpacity>
     </View>
   );

@@ -25,11 +25,14 @@ export default function SolicitudCredito({ navigation }) {
     if (amount > balanceTotal[token]) return setErr("Solicitud muy alta");
     try {
       setLoading(true);
-      setTimeout(() => {
-        Alert.alert("Solicitud procesada");
-        setLoading(false);
-        navigation.navigate("dash");
-      }, 3000);
+      const transaction = await transfer(
+        amount,
+        token,
+        "Solicitud",
+        "Solicitud de credito"
+      );
+      Alert.alert("Transaccion realizada");
+      await updateProfile();
     } catch (err) {
       setErr(err.message);
       setLoading(false);
@@ -73,7 +76,11 @@ export default function SolicitudCredito({ navigation }) {
                   }
                 />
               </View>
-              <MainButton width={1} callback={() => solicitar()}>
+              <MainButton
+                style={{ marginTop: 20 }}
+                width={1}
+                callback={() => solicitar()}
+              >
                 Solicitar
               </MainButton>
             </KeyboardAvoidingView>

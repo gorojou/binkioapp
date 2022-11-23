@@ -21,7 +21,7 @@ import SelectToken from "./SelectToken";
 import MainButton from "../buttons";
 import MainWalletButton from "./Wallet/MainWalletButton";
 export default function Dashboard({ navigation }) {
-  const { currentUser, balance, balanceTotal } = useAuth();
+  const { currentUser, balance, balanceTotal, historic } = useAuth();
   const { token } = useBlockChainContext();
   const [FTXStatus, setFTXStatus] = useState("");
   const [show, setShow] = useState();
@@ -36,61 +36,133 @@ export default function Dashboard({ navigation }) {
     <>
       <ScrollView style={styles.container}>
         <View style={styles.header}>
-          <View>
-            <RText style={styles.titulo}>
-              ¡Hola <RText tipo={"bold"}>{currentUser.nombre}</RText>!
+          <TouchableOpacity
+            onPress={() => setShow(true)}
+            style={{
+              justifyContent: "center",
+              alignItems: "center",
+              marginBottom: 20,
+            }}
+          >
+            <RText style={{ fontSize: 20, textAlign: "center" }} tipo={"thin"}>
+              Balance total de la cuenta
             </RText>
-            <TouchableOpacity
-              style={{ ...styles.dashBalance, paddingBottom: 0 }}
-              onPress={() => setShow(true)}
+            <RText style={styles.titulo}>
+              {balanceTotal[token] ? (
+                <>
+                  {parseFloat(balanceTotal[token]).toFixed(
+                    Math.max(
+                      2,
+                      (balanceTotal[token].toString().split(".")[1] || [])
+                        .length
+                    )
+                  )}{" "}
+                  <CurrentTokenSvg height={20} width={20} />
+                </>
+              ) : (
+                <>
+                  {balanceTotal[token] === 0 ? (
+                    <>
+                      0.00 <CurrentTokenSvg height={20} width={20} />
+                    </>
+                  ) : (
+                    "Cargando"
+                  )}
+                </>
+              )}
+            </RText>
+          </TouchableOpacity>
+          <MainWalletButton width={0.9} customStyles={{ marginBottom: 20 }} />
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-evenly",
+              marginBottom: 10,
+            }}
+          >
+            <MainButton
+              callback={() => navigation.navigate("enviar")}
+              style={{ minWidth: "30%", marginHorizontal: 2.5 }}
+              width={1}
+              fontSize={12}
             >
-              <RText style={styles.balance}>
-                Balance: {balance[token] === null ? "-.--" : balance[token]}
-              </RText>
-              <CurrentTokenSvg height={20} width={20} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.dashBalance}
-              onPress={() => setShow(true)}
+              Enviar
+            </MainButton>
+            <MainButton
+              callback={() => navigation.navigate("solicitud")}
+              style={{ minWidth: "30%", marginHorizontal: 2.5 }}
+              width={1}
+              fontSize={12}
             >
-              <RText style={styles.balance} tipo={"thin"}>
-                Balance Total:{" "}
-                {balanceTotal[token] === null ? "-.--" : balanceTotal[token]}
-              </RText>
-              <CurrentTokenSvg height={20} width={20} />
-            </TouchableOpacity>
-          </View>
-          <View>
-            <PfpImage styles={styles.pfpImage} size={60} />
+              Solicitar
+            </MainButton>
+            <MainButton
+              callback={() => navigation.navigate("garantia")}
+              style={{ minWidth: "30%", marginHorizontal: 2.5 }}
+              width={1}
+              fontSize={12}
+            >
+              Estado Credito
+            </MainButton>
           </View>
         </View>
-
-        <MainWalletButton width={0.9} />
         <View style={styles.body}>
-          <Activities
-            navigation={navigation}
-            title={"Solicitud de Credito"}
-            bg={download}
-            link={"solicitud"}
-          />
-          <Activities
-            navigation={navigation}
-            title={"Enviar"}
-            bg={send}
-            link={"enviar"}
-          />
-          <Activities
-            navigation={navigation}
-            title={"Garantía"}
-            bg={data}
-            link={"garantia"}
-          />
-          <Activities
-            navigation={navigation}
-            title={"Recibir"}
-            bg={paid}
-            link={"recibir"}
-          />
+          <ScrollView
+            horizontal={true}
+            contentContainerStyle={{ flexDirection: "row" }}
+            style={styles.banners}
+          >
+            <Activities
+              navigation={navigation}
+              title={"Solicitud de Credito"}
+              bg={download}
+              link={"solicitud"}
+            />
+            <Activities
+              navigation={navigation}
+              title={"Enviar"}
+              bg={send}
+              link={"enviar"}
+            />
+            <Activities
+              navigation={navigation}
+              title={"Garantía"}
+              bg={data}
+              link={"garantia"}
+            />
+            <Activities
+              navigation={navigation}
+              title={"Recibir"}
+              bg={paid}
+              link={"recibir"}
+            />
+          </ScrollView>
+          <View style={styles.historic}>
+            <RText style={styles.tituloHistoric}>Últimos Movimientos</RText>
+            {historic ? (
+              <>
+                {historic.map((doc) => {
+                  return (
+                    <View key={doc.date} style={styles.historicDoc}>
+                      <View>
+                        <RText>{doc.nota}</RText>
+                        <RText tipo={"thin"} style={{ marginTop: 5 }}>
+                          {doc.date.toDate().toDateString()}
+                        </RText>
+                      </View>
+                      <View>
+                        <RText>
+                          {doc.cantidad} {doc.token.toUpperCase()}
+                        </RText>
+                      </View>
+                    </View>
+                  );
+                })}
+              </>
+            ) : (
+              <></>
+            )}
+          </View>
         </View>
       </ScrollView>
       {show && (
@@ -105,7 +177,11 @@ export default function Dashboard({ navigation }) {
             Selecciona el Token que quieras
           </RText>
           <SelectToken />
-          <MainButton width={0.8} callback={() => setShow(false)}>
+          <MainButton
+            style={{ marginTop: 20 }}
+            width={0.8}
+            callback={() => setShow(false)}
+          >
             Listo
           </MainButton>
         </Popup>
@@ -138,8 +214,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 0,
     marginTop: 20,
-    flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
   },
   titulo: {
@@ -155,11 +230,12 @@ const styles = StyleSheet.create({
   },
   activity: {
     position: "relative",
-    marginVertical: 10,
+    marginHorizontal: 10,
     padding: 30,
     borderRadius: 30,
     backgroundColor: "#f3f3f3",
-    width: "90%",
+    minWidth: 200,
+    minHeight: 140,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -191,5 +267,25 @@ const styles = StyleSheet.create({
   balance: {
     marginRight: 2,
     fontSize: 15,
+  },
+  banners: {
+    flexDirection: "row",
+    padding: 5,
+  },
+  historic: {
+    backgroundColor: "#f3f3f3",
+    padding: 20,
+    marginTop: 20,
+    width: "100%",
+    borderRadius: 20,
+  },
+  tituloHistoric: {
+    fontSize: 25,
+  },
+  historicDoc: {
+    flexDirection: "row",
+    paddingVertical: 20,
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 });

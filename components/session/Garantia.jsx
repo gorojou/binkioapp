@@ -16,7 +16,7 @@ import SelectToken from "./SelectToken";
 import { useBlockChainContext } from "../../context/BlockchainContext";
 export default function Garantia({ navigation }) {
   const { token } = useBlockChainContext();
-  const { currentUser, transfer, balanceTotal } = useAuth();
+  const { currentUser, transfer, balanceTotal, updateProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [amount, setAmount] = useState();
@@ -25,13 +25,9 @@ export default function Garantia({ navigation }) {
     if (amount > balanceTotal[token]) return setErr("Solicitud muy alta");
     try {
       setLoading(true);
-      // const transaction = await transfer(amount, token);
-      setLoading(true);
-      setTimeout(() => {
-        Alert.alert("Solicitud procesada");
-        setLoading(false);
-        navigation.navigate("dash");
-      }, 3000);
+      const transaction = await transfer(amount, token, "Garantia", "Garantia");
+      Alert.alert("Transaccion realizada");
+      await updateProfile();
     } catch (err) {
       setErr(err.message);
       setLoading(false);
@@ -75,7 +71,11 @@ export default function Garantia({ navigation }) {
                   }
                 />
               </View>
-              <MainButton width={1} callback={() => solicitar()}>
+              <MainButton
+                style={{ marginTop: 20 }}
+                width={1}
+                callback={() => solicitar()}
+              >
                 Ofrecer
               </MainButton>
             </KeyboardAvoidingView>

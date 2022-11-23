@@ -72,7 +72,11 @@ export default function SelectType() {
               </RText>
             </TouchableOpacity>
           </View>
-          <MainButton width={1} callback={() => register()}>
+          <MainButton
+            style={{ marginTop: 20 }}
+            width={1}
+            callback={() => register()}
+          >
             Registrarme
           </MainButton>
           {loading && <Loader size={100} />}

@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { ethers } from "ethers";
 import useAuth from "./AuthContext";
 import wbtcAbi from "../utils/wbtcAbi.json";
+import usdtAbi from "../utils/usdtAbi.json";
 const BCContext = React.createContext();
 export function useBlockChainContext() {
   return useContext(BCContext);
@@ -12,9 +13,11 @@ function BlockchainContext({ children }) {
     balance,
     setBalance,
     mainWallet,
+    setMainWallet,
     wallets,
     setBalanceTotal,
     balanceTotal,
+    setWallets,
   } = useAuth();
   const tokenObject = {
     eth: {
@@ -27,7 +30,13 @@ function BlockchainContext({ children }) {
     },
     wbtc: {
       type: "eth",
-      token: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      token: "0x6ce8dA28E2f864420840cF74474eFf5fD80E65B8",
+      abi: wbtcAbi,
+    },
+    usdt: {
+      type: "eth",
+      token: "0x337610d27c682E347C9cD60BD4b3b107C9d34dDd",
+      abi: usdtAbi,
     },
   };
   const [provider, setProvider] = useState();
@@ -37,7 +46,7 @@ function BlockchainContext({ children }) {
   const checkContractBalance = async (contract, wallet) => {
     return parseFloat(
       ethers.utils.formatEther(await contract.balanceOf(wallet))
-    ).toFixed(2);
+    );
   };
 
   const createContractInstance = async (tokenAddress, tokenAbi) => {
@@ -45,74 +54,89 @@ function BlockchainContext({ children }) {
   };
 
   const checkBalance = async (wallet, returns) => {
-    setBalance({ ...balance, [token]: "Cargando" });
-    if (returns) setBalanceTotal({ ...balanceTotal, [token]: "Cargando" });
-    if (token === "eth") {
-      const res = parseFloat(
-        ethers.utils.formatEther(await provider.getBalance(wallet))
-      ).toFixed(2);
-      if (returns) return await res;
-      setBalance({
-        ...balance,
-        eth: res,
-      });
-    }
-    if (token === "wbtc") {
-      const contract = await createContractInstance(
-        tokenObject[token].token,
-        wbtcAbi
-      );
-      const contractBalance = await checkContractBalance(contract, wallet);
-      if (returns) return await contractBalance;
-      setBalance({ ...balance, wbtc: await contractBalance });
-    }
+    let balances = {};
+    await Promise.all(
+      Object.keys(balanceTotal).map(async (key) => {
+        if (key === "btc") {
+          balances = { ...balances, [key]: parseFloat(0) };
+        } else if (key === "eth") {
+          const res = parseFloat(
+            ethers.utils.formatEther(await provider.getBalance(wallet))
+          );
+          balances = { ...balances, [key]: await res };
+        } else {
+          const contract = await createContractInstance(
+            tokenObject[key].token,
+            tokenObject[key].abi
+          );
+          const contractBalance = await checkContractBalance(contract, wallet);
+          balances = { ...balances, [key]: await contractBalance };
+        }
+      })
+    );
+
+    return balances;
   };
 
   const createRandomWallet = async () => {
     return await ethers.Wallet.createRandom();
   };
 
-  const addBalances = async () => {
-    let res = 0;
-    await Promise.all(
-      wallets.map(async (wallet) => {
-        const balanceNum = await checkBalance(wallet.wallet, true);
-        res = parseFloat(res) + parseFloat(balanceNum);
-        console.log(balanceNum);
-      })
-    );
-    return res.toFixed(2);
-  };
-
   useEffect(() => {
     const app = async () => {
-      if (!provider || token === "btc" || token === "usdt" || token === "wbtc")
-        return;
-      if (currentUser && balance[token] === null) {
-        checkBalance(mainWallet.wallet);
-        // console.log(await addBalances());
-        setBalanceTotal({
-          ...balanceTotal,
-          [token]: await addBalances(),
-        });
-      }
+      if (!provider || !wallets || !mainWallet) return;
+      if (wallets[0].balance) return;
+      let updatedWallets = [];
+      let total = { btc: 0, eth: 0, wbtc: 0, usdt: 0 };
+      await Promise.all(
+        wallets.map(async (wallet) => {
+          const walletBalance = await checkBalance(wallet.wallet);
+          Object.keys(walletBalance).map((key) => {
+            total = {
+              ...total,
+              [key]: parseFloat(total[key]) + parseFloat(walletBalance[key]),
+            };
+          });
+          if (wallet.main) {
+            setMainWallet({ ...mainWallet, balance: await walletBalance });
+          }
+          updatedWallets.push({
+            ...wallet,
+            balance: await walletBalance,
+          });
+        })
+      );
+      setBalanceTotal(total);
+      setWallets(await updatedWallets);
     };
     app();
-  }, [token, provider]);
-  useEffect(() => {
-    const app = async () => {
-      if (
-        !provider ||
-        token === "btc" ||
-        token === "usdt" ||
-        token === "wbtc"
-      ) {
-        return;
-      }
-      await checkBalance(mainWallet.wallet);
-    };
-    app();
-  }, [mainWallet]);
+  }, [provider, wallets]);
+  // const addBalances = async () => {
+  //   let res = 0;
+  //   await Promise.all(
+  //     wallets.map(async (wallet) => {
+  //       const balanceNum = await checkBalance(wallet.wallet, null, true);
+  //       res = parseFloat(res) + parseFloat(balanceNum);
+  //       console.log(balanceNum);
+  //     })
+  //   );
+  //   return res ;
+  // };
+  // useEffect(() => {
+  //   const app = async () => {
+  //     if (!provider || token === "btc") return;
+  //     if (
+  //       (currentUser && balance[token] === null) ||
+  //       balance[token] === "Cargando"
+  //     ) {
+  //       setBalanceTotal({
+  //         ...balanceTotal,
+  //         [token]: await addBalances(),
+  //       });
+  //     }
+  //   };
+  //   app();
+  // }, [token, provider]);
   useEffect(() => {
     const app = async () => {
       if (!provider) {

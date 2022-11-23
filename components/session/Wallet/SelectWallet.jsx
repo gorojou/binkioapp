@@ -56,7 +56,11 @@ export default function SelectWallet({ create }) {
               </RText>
             </TouchableOpacity>
           </View>
-          <MainButton width={1} callback={() => create(type)}>
+          <MainButton
+            style={{ marginTop: 20 }}
+            width={1}
+            callback={() => create(type)}
+          >
             Crear Wallet
           </MainButton>
           {loading && <Loader size={100} />}

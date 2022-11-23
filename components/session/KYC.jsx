@@ -130,7 +130,11 @@ export default function KYC() {
               <RText style={styles.instrucciones} tipo={"thin"}>
                 Esto puede tardar unos minutos
               </RText>
-              <MainButton width={0.9} callback={() => sendImages()}>
+              <MainButton
+                style={{ marginTop: 20 }}
+                width={0.9}
+                callback={() => sendImages()}
+              >
                 Enviar
               </MainButton>
             </>
@@ -200,11 +204,16 @@ const Document = ({ setShow, images, setImages }) => {
           />
         )}
         {images.document && (
-          <SecondaryButton width={0.8} callback={() => pickImage()}>
+          <SecondaryButton
+            style={{ marginTop: 20 }}
+            width={0.8}
+            callback={() => pickImage()}
+          >
             Volver a Escoger
           </SecondaryButton>
         )}
         <MainButton
+          style={{ marginTop: 20 }}
           width={0.8}
           callback={() => (images.document ? setShow("") : pickImage())}
         >
@@ -256,11 +265,16 @@ const SelfieImage = ({ setShow, images, setImages }) => {
           />
         )}
         {images.selfie && (
-          <SecondaryButton width={0.8} callback={() => pickImage()}>
+          <SecondaryButton
+            style={{ marginTop: 20 }}
+            width={0.8}
+            callback={() => pickImage()}
+          >
             Volver a tomar
           </SecondaryButton>
         )}
         <MainButton
+          style={{ marginTop: 20 }}
           width={0.8}
           callback={() => (images.selfie ? setShow("") : pickImage())}
         >

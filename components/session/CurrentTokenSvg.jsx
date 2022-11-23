@@ -4,6 +4,7 @@ import Ethereum from "../../assets/svg/eth.svg";
 import WBTC from "../../assets/svg/wbtc.svg";
 import USDT from "../../assets/svg/usdt.svg";
 import { useBlockChainContext } from "../../context/BlockchainContext";
+import RText from "../RText";
 export default function CurrentTokenSvg({ width, height }) {
   const { token } = useBlockChainContext();
   const findSvg = () => {
@@ -18,5 +19,12 @@ export default function CurrentTokenSvg({ width, height }) {
         return <WBTC width={width} height={height} />;
     }
   };
-  return <>{findSvg()}</>;
+  return (
+    <>
+      {token === "eth" && <Ethereum width={width} height={height} />}
+      {token === "btc" && <Bitcoin width={width} height={height} />}
+      {token === "usdt" && <USDT width={width} height={height} />}
+      {token === "wbtc" && <WBTC width={width} height={height} />}
+    </>
+  );
 }

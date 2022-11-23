@@ -1,5 +1,7 @@
 import "@ethersproject/shims";
 import "./shim";
+import { Buffer } from "buffer";
+global.Buffer = Buffer;
 import { StyleSheet, Text, View, SafeAreaView, StatusBar } from "react-native";
 import Initial from "./navigation/Initial";
 import TitleLogo from "./components/TitleLogo";

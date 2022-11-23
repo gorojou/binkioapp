@@ -43,7 +43,10 @@ export default function Recibir({ navigation }) {
                 <RText style={{ ...styles.formTitle, marginTop: 30 }}>
                   Necesitas crear una wallet
                 </RText>
-                <MainButton callback={() => navigation.navigate("wallet")}>
+                <MainButton
+                  style={{ marginTop: 20 }}
+                  callback={() => navigation.navigate("wallet")}
+                >
                   Ir a crear Wallet
                 </MainButton>
               </>

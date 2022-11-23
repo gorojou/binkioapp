@@ -155,7 +155,11 @@ export default function Register({ navigation }) {
             }
           />
         </View>
-        <MainButton width={1} callback={() => register()}>
+        <MainButton
+          style={{ marginTop: 20 }}
+          width={1}
+          callback={() => register()}
+        >
           Registrate
         </MainButton>
         {loading && <Loader size={100} />}

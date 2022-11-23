@@ -106,7 +106,11 @@ const PopUpMnemonic = ({ setShowWallet, showWallet }) => {
                     Llave Privada
                   </RText>
                   <CopyToClipboard value={data.privKey} />
-                  <MainButton width={0.8} callback={() => setShowWallet()}>
+                  <MainButton
+                    style={{ marginTop: 20 }}
+                    width={0.8}
+                    callback={() => setShowWallet()}
+                  >
                     Volver
                   </MainButton>
                 </>
@@ -129,7 +133,11 @@ const PopUpMnemonic = ({ setShowWallet, showWallet }) => {
                       onChangeText={(value) => setPass(value)}
                     />
                   </View>
-                  <MainButton width={0.8} callback={() => confirmPass()}>
+                  <MainButton
+                    style={{ marginTop: 20 }}
+                    width={0.8}
+                    callback={() => confirmPass()}
+                  >
                     Aceptar
                   </MainButton>
                 </>
@@ -147,10 +155,18 @@ const PopUpMnemonic = ({ setShowWallet, showWallet }) => {
                 Los datos privados de tu cuenta deberian ser vistos solo por ti
                 en una red y lugar seguro
               </RText>
-              <SecondaryButton width={0.8} callback={() => setConfirm(true)}>
+              <SecondaryButton
+                style={{ marginTop: 20 }}
+                width={0.8}
+                callback={() => setConfirm(true)}
+              >
                 Ver Datos
               </SecondaryButton>
-              <MainButton width={0.8} callback={() => setShowWallet()}>
+              <MainButton
+                style={{ marginTop: 20 }}
+                width={0.8}
+                callback={() => setShowWallet()}
+              >
                 Cancelar
               </MainButton>
             </>

@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import { Alert, View } from "react-native";
 import Loader from "../components/Loader";
-import { runTransaction } from "firebase/firestore";
+import { Firestore, runTransaction } from "firebase/firestore";
 import firebase, { auth, firestore, storage } from "../firebase";
 import * as SecureStore from "expo-secure-store";
 import { ethers } from "ethers";
@@ -26,6 +26,7 @@ export function AuthProvider({ children, navigation }) {
   });
   const [wallets, setWallets] = useState();
   const [mainWallet, setMainWallet] = useState();
+  const [historic, setHistoric] = useState();
   const logIn = async (email, password) => {
     try {
       await SecureStore.setItemAsync("USER_EMAIL", email);
@@ -155,19 +156,32 @@ export function AuthProvider({ children, navigation }) {
     }
   };
 
-  const updateProfile = async (silent) => {
+  const updateProfile = async (silent, user) => {
     if (!silent) setLoading(true);
     try {
       const userDoc = await firestore
         .collection("users")
-        .doc(currentUser.user.uid)
+        .doc(user ? user.uid : currentUser.user.uid)
         .get();
       const userWallets = await firestore
         .collection("users")
-        .doc(currentUser.user.uid)
+        .doc(user ? user.uid : currentUser.user.uid)
         .collection("wallets")
         .orderBy("main", "desc")
         .get();
+      const userHistoric = await firestore
+        .collection("users")
+        .doc(user ? user.uid : currentUser.user.uid)
+        .collection("historic")
+        .orderBy("date", "desc")
+        .get();
+      if (!userHistoric.empty) {
+        let historic = [];
+        userHistoric.forEach((doc) => {
+          historic.push(doc.data());
+        });
+        setHistoric(historic);
+      }
       if (!userWallets.empty) {
         let arr = [];
         let main;
@@ -175,10 +189,25 @@ export function AuthProvider({ children, navigation }) {
           if (doc.data().main) main = doc.data();
           arr.push(doc.data());
         });
+        if (!main) {
+          await firebase
+            .firestore()
+            .collection("users")
+            .doc(user ? user.uid : currentUser.user.uid)
+            .collection("wallets")
+            .doc(arr[0].wallet)
+            .update({ main: true })
+            .then((doc) => {
+              main = { ...arr[0], main: true };
+            });
+        }
         setMainWallet(main);
         setWallets(arr);
       }
-      setCurrentUser({ user: currentUser.user, ...userDoc.data() });
+      setCurrentUser({
+        user: user ? user : currentUser.user,
+        ...userDoc.data(),
+      });
       setLoading(false);
     } catch (err) {
       console.log(err);
@@ -229,17 +258,34 @@ export function AuthProvider({ children, navigation }) {
       throw err;
     }
   };
+  const savePin = async (pin) => {
+    const userDoc = await firestore
+      .collection("users")
+      .doc(currentUser.user.uid)
+      .update({ pin: pin });
+    await updateProfile();
+  };
   const logOut = async (goToStart) => {
     setLoading(true);
     await SecureStore.deleteItemAsync("USER_EMAIL", {});
     await SecureStore.deleteItemAsync("USER_PASS", {});
     await auth.signOut();
   };
-  const transfer = async (amount, token) => {
-    if (amount > balance[token]) throw { message: "Saldo insuficiente" };
+  const transfer = async (amount, token, type, nota) => {
+    if (amount > balanceTotal[token]) throw { message: "Saldo insuficiente" };
     if (amount <= 0) throw { message: "Numero invalido" };
     try {
-      await updateProfile();
+      await firestore
+        .collection("users")
+        .doc(currentUser.user.uid)
+        .collection("historic")
+        .add({
+          tipo: type,
+          token: token,
+          cantidad: amount,
+          date: firebase.firestore.Timestamp.now(),
+          nota: nota ? nota : "",
+        });
     } catch (err) {
       throw err;
     }
@@ -297,32 +343,11 @@ export function AuthProvider({ children, navigation }) {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setLoading(true);
-      // await SecureStore.deleteItemAsync("wallets", {});
       if (user) {
         try {
-          const userDoc = await firestore
-            .collection("users")
-            .doc(user.uid)
-            .get();
-          const userWallets = await firestore
-            .collection("users")
-            .doc(user.uid)
-            .collection("wallets")
-            .orderBy("main", "desc")
-            .get();
-          if (!userWallets.empty) {
-            let arr = [];
-            let main;
-            await userWallets.forEach((doc) => {
-              if (doc.data().main) main = doc.data();
-              arr.push(doc.data());
-            });
-            setMainWallet(main);
-            setWallets(arr);
-          }
-          setCurrentUser({ user: user, ...userDoc.data() });
-          setLoading(false);
+          await updateProfile(false, user);
         } catch (err) {
+          console.log(err);
           logOut();
           Alert.alert("Algo salio mal, intente nuevamente");
         }
@@ -341,6 +366,7 @@ export function AuthProvider({ children, navigation }) {
   }, []);
   const value = {
     signUp,
+    savePin,
     currentUser,
     logIn,
     logOut,
@@ -354,9 +380,12 @@ export function AuthProvider({ children, navigation }) {
     mainWallet,
     setBalance,
     setNewMainWallet,
+    setMainWallet,
     setBalanceTotal,
     balanceTotal,
     deleteWallet,
+    setWallets,
+    historic,
   };
   return (
     <AuthContext.Provider value={value}>
