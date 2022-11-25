@@ -8,7 +8,7 @@ import Selfie from "../../assets/svg/selfie.svg";
 import Badge from "../../assets/svg/badge.svg";
 import firebase, { storage, firestore } from "../../firebase";
 import s from "../styles";
-import Popup from "./Popup";
+import Popup from "../Popup";
 import * as ImagePicker from "expo-image-picker";
 import LoaderProgress from "../LoaderProgress";
 export default function KYC() {

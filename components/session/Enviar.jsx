@@ -18,28 +18,27 @@ import CrediCard from "../../assets/svg/credit_card.svg";
 import Swap from "../../assets/svg/swap.svg";
 import SelectToken from "./SelectToken";
 import { useBlockChainContext } from "../../context/BlockchainContext";
+import { usePopup } from "../../context/Popup";
+import { useLocalAuth } from "../../context/LocalAuthentication";
+import CurrentTokenSvg from "./CurrentTokenSvg";
 export default function Enviar({ navigation }) {
-  const { currentUser, balanceTotal, transfer, updateProfile } = useAuth();
+  const { balanceTotal } = useAuth();
   const { token } = useBlockChainContext();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [amount, setAmount] = useState();
   const [tipo, setTipo] = useState("");
+  const { setShow, setComponent } = usePopup();
+
   const solicitar = async () => {
     if (!amount) return setErr("Numero invalido");
+    if (amount > balanceTotal[token]) return setErr("Saldo insuficiente");
     if (!tipo) return setErr("Selecciona un tipo");
     if (tipo === "deuda" && amount > "10.56")
       return setErr("Excede lo necesario");
     try {
-      setLoading(true);
-      const transaction = await transfer(
-        amount,
-        token,
-        "Transferencia",
-        "Prueba sistema historial"
-      );
-      Alert.alert("Transaccion realizada");
-      await updateProfile();
+      setShow(true);
+      setComponent(<Confirmacion amount={amount} tipo={tipo} token={token} />);
     } catch (err) {
       setErr(err.message);
       setLoading(false);
@@ -99,7 +98,7 @@ export default function Enviar({ navigation }) {
                 Tu balance actual
               </RText>
               <RText style={styles.balanceNum}>
-                {balanceTotal[token] ? balanceTotal[token] : "-.--"}
+                {balanceTotal[token] ? balanceTotal[token] : "0.00"}
               </RText>
             </View>
             <KeyboardAvoidingView>
@@ -162,6 +161,96 @@ const Terceros = () => {
   );
 };
 
+const Confirmacion = ({ amount, tipo, token }) => {
+  const { updateProfile } = useAuth();
+  const { transfer } = useAuth();
+  const { requireAuth } = useLocalAuth();
+  const [nota, setNota] = useState();
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const confrimTransaction = async () => {
+    setLoading(true);
+    if (!(await requireAuth())) {
+      setLoading(false);
+      return setErr("La autentificacion ha fallado");
+    }
+    try {
+      const transaction = await transfer(
+        amount,
+        token,
+        tipo === "deuda" ? "Pago Deuda" : "Transferencia a terceros",
+        nota ? nota : ""
+      );
+      Alert.alert("Transaccion realizada");
+      await updateProfile();
+    } catch (err) {
+      setErr(err.message);
+      setLoading(false);
+    }
+  };
+  return (
+    <>
+      <View
+        style={{
+          justifyContent: "center",
+          alignContent: "center",
+          width: "100%",
+          padding: 15,
+        }}
+      >
+        <RText style={styles.formTitle}>Confirma transferencia</RText>
+        {err && (
+          <RText style={{ ...s.errText, textAlign: "center" }}>{err}</RText>
+        )}
+        <RText tipo={"thin"} style={{ ...styles.balance, marginTop: 20 }}>
+          Cantidad a enviar
+        </RText>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+          }}
+        >
+          <RText tipo={"bold"} style={{ ...styles.balanceNum, marginRight: 5 }}>
+            {amount}
+          </RText>
+          <CurrentTokenSvg height={20} width={20} />
+        </View>
+        <View style={styles.confirmInfo}>
+          <RText tipo={"thin"}>Tipo de transferencia:</RText>
+          <RText tipo={"bold"}>
+            {tipo === "deuda" ? "Pago Deuda" : "Transferencia a terceros"}
+          </RText>
+        </View>
+        <KeyboardAvoidingView>
+          <View style={styles.intputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Nota"
+              value={nota}
+              onChangeText={(value) => {
+                setNota((prev) => {
+                  if (value.length < 140) {
+                    return value;
+                  }
+                  return prev;
+                });
+              }}
+            />
+          </View>
+          <MainButton width={1} callback={() => confrimTransaction()}>
+            Confirmar
+          </MainButton>
+        </KeyboardAvoidingView>
+      </View>
+      {loading && <Loader size={100} />}
+    </>
+  );
+};
+
 const styles = StyleSheet.create({
   sessionContainer: {
     overflow: "scroll",
@@ -176,6 +265,7 @@ const styles = StyleSheet.create({
   },
   formTitle: {
     fontSize: 30,
+    textAlign: "center",
   },
   intputContainer: {
     flexDirection: "row",
@@ -262,5 +352,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
+  },
+  confirmInfo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 5,
   },
 });

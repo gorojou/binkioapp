@@ -1,8 +1,8 @@
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity, TextInput } from "react-native";
 import React, { useState } from "react";
 import RText from "../../RText";
 import useAuth from "../../../context/AuthContext";
-import MainWalletButton, { SecondaryButton } from "../../buttons";
+import { SecondaryButton } from "../../buttons";
 import Star from "../../../assets/svg/star.svg";
 import Eye from "../../../assets/svg/eye.svg";
 import Delete from "../../../assets/svg/delete.svg";
@@ -12,10 +12,12 @@ import Loader from "../../Loader";
 import { useBlockChainContext } from "../../../context/BlockchainContext";
 import { usePopup } from "../../../context/Popup";
 import CurrentTokenSvg from "../CurrentTokenSvg";
+import MainButton from "../../buttons";
+import s from "../../styles";
+import { useLocalAuth } from "../../../context/LocalAuthentication";
 export default function WalletList({ setShowWallet, walletSection }) {
   const { wallets, setNewMainWallet, deleteWallet } = useAuth();
   const { token } = useBlockChainContext();
-  const [createWallet, setCreateWallet] = useState(false);
   const [loading, setLoading] = useState(false);
   const { setShow, setComponent, setClosingValue } = usePopup();
   const changeMainWallet = async (wallet) => {
@@ -25,9 +27,8 @@ export default function WalletList({ setShowWallet, walletSection }) {
     setLoading(false);
   };
   const ereaseWallet = async (wallet) => {
-    setLoading(true);
-    await deleteWallet(wallet);
-    setLoading(false);
+    setShow(true);
+    setComponent(<DeleteWallet wallet={wallet} />);
   };
   return (
     <>
@@ -66,45 +67,61 @@ export default function WalletList({ setShowWallet, walletSection }) {
                   style={{ justifyContent: "center", alignContent: "center" }}
                 >
                   <RText style={styles.walletText}>{wallet.name}</RText>
-                  <RText style={styles.walletText} tipo={"thin"}>
-                    {wallet.balance ? (
-                      <>
-                        {parseFloat(wallet.balance[token]).toFixed(
-                          Math.max(
-                            2,
-                            (
-                              wallet.balance[token].toString().split(".")[1] ||
-                              []
-                            ).length
-                          )
-                        )}{" "}
-                        <CurrentTokenSvg width={15} height={15} />
-                      </>
-                    ) : (
-                      "Cargando"
-                    )}
-                  </RText>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                    }}
+                  >
+                    <RText style={styles.walletText} tipo={"thin"}>
+                      {wallet.balance ? (
+                        <>
+                          {parseFloat(wallet.balance[token]).toFixed(
+                            Math.max(
+                              2,
+                              (
+                                wallet.balance[token]
+                                  .toString()
+                                  .split(".")[1] || []
+                              ).length
+                            )
+                          )}{" "}
+                        </>
+                      ) : (
+                        "Cargando"
+                      )}
+                    </RText>
+                    <CurrentTokenSvg width={15} height={15} />
+                  </View>
                 </View>
                 <View style={{ flexDirection: "row" }}>
                   {walletSection && (
                     <>
                       <TouchableOpacity
-                        onPress={() => ereaseWallet(wallet.wallet)}
+                        style={styles.walletOption}
+                        onPress={() => ereaseWallet(wallet)}
                       >
                         <Delete fill={"grey"} width={25} height={25} />
                       </TouchableOpacity>
-                      <TouchableOpacity onPress={() => setShowWallet(wallet)}>
+                      <TouchableOpacity
+                        style={styles.walletOption}
+                        onPress={() => setShowWallet(wallet)}
+                      >
                         <Eye fill={"grey"} width={25} height={25} />
                       </TouchableOpacity>
                     </>
                   )}
-                  <TouchableOpacity onPress={() => changeMainWallet(wallet)}>
+                  <TouchableOpacity
+                    style={styles.walletOption}
+                    onPress={() => changeMainWallet(wallet)}
+                  >
                     <Star
                       fill={wallet.main ? "#5d22fa" : "grey"}
                       width={25}
                       height={25}
                     />
                   </TouchableOpacity>
+                  {walletSection && <></>}
                 </View>
               </View>
             );
@@ -115,6 +132,55 @@ export default function WalletList({ setShowWallet, walletSection }) {
     </>
   );
 }
+const DeleteWallet = ({ wallet }) => {
+  const { deleteWallet, updateProfile } = useAuth();
+  const [nombre, setNombre] = useState();
+  const { requireAuth } = useLocalAuth();
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState();
+  const ereaseWallet = async () => {
+    setLoading(true);
+    try {
+      if (!(await requireAuth())) return;
+      await deleteWallet(wallet.wallet);
+      setLoading(false);
+    } catch (err) {
+      console.log(err);
+      setErr("Algo salio mal");
+    }
+  };
+  return (
+    <>
+      <View style={styles.deleteWalletConfirmation}>
+        <RText style={styles.title}>
+          Seguro que quiere borrar la wallet {wallet.name}?
+        </RText>
+        <RText tipo={"thin"} style={{ textAlign: "center" }}>
+          Coloca el nombre de tu wallet "{wallet.name}" para confirmar la
+          operacion
+        </RText>
+        {err && <RText style={s.errText}>{err}</RText>}
+        <RText style={styles}></RText>
+        <View style={s.intputContainer}>
+          <TextInput
+            style={s.input}
+            placeholder="Nombre"
+            value={nombre}
+            onChangeText={(value) => setNombre(value)}
+          />
+        </View>
+        <MainButton
+          width={1}
+          blocked={!(nombre === wallet.name)}
+          callback={() => ereaseWallet()}
+        >
+          Borrar
+        </MainButton>
+      </View>
+      {loading && <Loader size={100} />}
+    </>
+  );
+};
 const styles = StyleSheet.create({
   title: {
     textAlign: "center",
@@ -139,5 +205,13 @@ const styles = StyleSheet.create({
   },
   walletText: {
     fontSize: 18,
+  },
+  walletOption: {
+    marginHorizontal: 5,
+    position: "relative",
+  },
+  deleteWalletConfirmation: {
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

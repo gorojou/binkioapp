@@ -7,9 +7,19 @@ export default MainButton = ({
   width,
   callback,
   fontSize,
+  blocked,
 }) => {
   return (
-    <View style={{ flexDirection: "row", justifyContent: "center", ...style }}>
+    <View
+      style={{
+        flexDirection: "row",
+        justifyContent: "center",
+        position: "relative",
+        borderRadius: 15,
+        overflow: "hidden",
+        ...style,
+      }}
+    >
       <TouchableOpacity
         style={{ ...s.button, flex: width }}
         onPress={() => callback()}
@@ -18,6 +28,18 @@ export default MainButton = ({
           {children}
         </RText>
       </TouchableOpacity>
+      {blocked && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: "#f3f3f3a1",
+          }}
+        ></View>
+      )}
     </View>
   );
 };

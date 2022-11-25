@@ -11,8 +11,10 @@ import s from "../../styles";
 import useAuth from "../../../context/AuthContext";
 import { ethers } from "ethers";
 import CopyToClipboard from "../../CopyToClipboard";
+import { useLocalAuth } from "../../../context/LocalAuthentication";
 export default function ImportWallet({ navigation }) {
   const { createWallet, updateProfile } = useAuth();
+  const { requireAuth } = useLocalAuth();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [nombre, setNombre] = useState("");
@@ -21,6 +23,10 @@ export default function ImportWallet({ navigation }) {
   const createNewWallet = async () => {
     setLoading(true);
     try {
+      if (!(await requireAuth())) {
+        setLoading(false);
+        return setErr("La autentificacion ha fallado");
+      }
       await createWallet(wallet, nombre);
       await updateProfile();
     } catch (err) {

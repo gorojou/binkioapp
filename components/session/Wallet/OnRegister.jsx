@@ -11,6 +11,7 @@ import s from "../../styles";
 import Eye from "../../../assets/svg/eyeHidden.svg";
 import Loader from "../../Loader";
 import ImportWallet from "./ImportWallet";
+import { useLocalAuth } from "../../../context/LocalAuthentication";
 export default function OnRegister({ confirmWallet }) {
   const { createRandomWallet } = useBlockChainContext();
   const [wallet, setWallet] = useState();
@@ -75,16 +76,23 @@ const CheckNewWallet = ({ mnemonic, wallet, confirmWallet }) => {
   const [err, setErr] = useState();
   const [loading, setLoading] = useState(false);
   const { createWallet } = useAuth();
+  const { requireAuth } = useLocalAuth();
   const continueToTest = async () => {
     setErr("");
     console.log(wallet);
     if (!nombre) return setErr("Colocale Nombre a tu wallet");
-    if (confirmWallet) return await saveWallet();
+    if (confirmWallet) {
+      return await saveWallet();
+    }
     setdisplayTest(true);
   };
   const saveWallet = async () => {
     try {
       setLoading(true);
+      if (!(await requireAuth())) {
+        setLoading(false);
+        return setErr("La autentificacion ha fallado");
+      }
       await createWallet(wallet, nombre);
     } catch (err) {
       console.log(err);

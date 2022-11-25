@@ -59,7 +59,7 @@ export default function SolicitudCredito({ navigation }) {
                 Tu balance total actual
               </RText>
               <RText style={styles.balanceNum}>
-                {balanceTotal[token] !== null ? balanceTotal[token] : "-.--"}
+                {balanceTotal[token] !== null ? balanceTotal[token] : "0.00"}
               </RText>
             </View>
             <KeyboardAvoidingView>

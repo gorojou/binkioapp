@@ -1,6 +1,10 @@
 import { StyleSheet } from "react-native";
 
 module.exports = StyleSheet.create({
+  container: {
+    flex: 1,
+    overflow: "scroll",
+  },
   button: {
     justifyContent: "center",
     alignItems: "center",
@@ -20,6 +24,7 @@ module.exports = StyleSheet.create({
     padding: 12,
     borderRadius: 15,
   },
+
   intputContainer: {
     flexDirection: "row",
     marginVertical: 10,

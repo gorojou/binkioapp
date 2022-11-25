@@ -2,7 +2,7 @@ import { View, StyleSheet, TouchableOpacity, Image } from "react-native";
 import React, { useState } from "react";
 import RText from "../RText";
 import Home from "../../assets/svg/home.svg";
-import Settings from "../../assets/svg/settings.svg";
+import History from "../../assets/svg/history.svg";
 import Wallet from "../../assets/svg/wallet.svg";
 import useAuth from "../../context/AuthContext";
 import PfpImage from "./PfpImage";
@@ -17,7 +17,7 @@ export default function Navbar({ navigation }) {
       <TouchableOpacity onPress={() => navigation.navigate("wallet")}>
         <Wallet width={40} height={40} fill={"black"} />
       </TouchableOpacity>
-      <Settings width={40} height={40} fill={"black"} />
+      <History width={40} height={40} fill={"black"} />
       <TouchableOpacity onPress={() => navigation.navigate("profile")}>
         <PfpImage size={30} />
       </TouchableOpacity>

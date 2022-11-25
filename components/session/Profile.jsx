@@ -1,4 +1,11 @@
-import { View, StyleSheet, Image, TouchableOpacity } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  Dimensions,
+} from "react-native";
 import React, { useState } from "react";
 import RText from "../RText";
 import Navbar from "./Navbar";
@@ -8,6 +15,7 @@ import MainButton, { SecondaryButton } from "../buttons";
 import firebase, { storage, firestore } from "../../firebase";
 import Loader from "../Loader";
 import PfpImage from "./PfpImage";
+import AccountSettings from "../../assets/svg/accountSettings.svg";
 export default function Profile({ navigation }) {
   const { currentUser, uploadPfp, updateProfile } = useAuth();
   const [image, setImage] = useState(null);
@@ -52,68 +60,88 @@ export default function Profile({ navigation }) {
   };
   return (
     <>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={pickImage}>
-          {image ? (
-            <Image
-              source={
-                image
-                  ? { uri: image }
-                  : currentUser.pfp
-                  ? { uri: currentUser.pfp }
-                  : require("../../assets/blankpfp.jpg")
-              }
-              style={styles.pfpImage}
-            />
-          ) : (
-            <PfpImage size={120} />
-          )}
-          <View style={styles.addPfpIndicator}>
-            <RText style={styles.addPfpIndicatorText} tipo={"bold"}>
-              +
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={pickImage}>
+            {image ? (
+              <Image
+                source={
+                  image
+                    ? { uri: image }
+                    : currentUser.pfp
+                    ? { uri: currentUser.pfp }
+                    : require("../../assets/blankpfp.jpg")
+                }
+                style={styles.pfpImage}
+              />
+            ) : (
+              <PfpImage size={120} />
+            )}
+            <View style={styles.addPfpIndicator}>
+              <RText style={styles.addPfpIndicatorText} tipo={"bold"}>
+                +
+              </RText>
+            </View>
+          </TouchableOpacity>
+          <View style={styles.headerText}>
+            <RText style={styles.headerTextNombre} tipo={"bold"}>
+              {currentUser.nombre}
+            </RText>
+            <RText tipo={"thin"} style={styles.headerTextEmail}>
+              {currentUser.user.email}
             </RText>
           </View>
-        </TouchableOpacity>
-        {image && (
-          <MainButton style={{ marginTop: 20 }} callback={uploadImageAsync}>
-            Cargar imagen de perfil
-          </MainButton>
-        )}
-      </View>
-      <View style={styles.body}>
-        <View style={styles.dataArea}>
-          <RText style={styles.dataText}>Nombre:</RText>
-          <RText style={styles.dataText} tipo={"bold"}>
-            {currentUser.nombre}
-          </RText>
+          {image && (
+            <MainButton
+              width={0.9}
+              style={{ marginTop: 20 }}
+              callback={uploadImageAsync}
+            >
+              Cargar imagen de perfil
+            </MainButton>
+          )}
         </View>
-        <View style={styles.dataArea}>
-          <RText style={styles.dataText}>Telefono:</RText>
-          <RText style={styles.dataText} tipo={"bold"}>
-            {currentUser.telefono}
-          </RText>
+        <View style={styles.hr}></View>
+        <View style={styles.body}>
+          {/* <View style={styles.dataArea}>
+            <RText style={styles.dataText}>Nombre:</RText>
+            <RText style={styles.dataText} tipo={"bold"}>
+              {currentUser.nombre}
+            </RText>
+          </View>
+          <View style={styles.dataArea}>
+            <RText style={styles.dataText}>Telefono:</RText>
+            <RText style={styles.dataText} tipo={"bold"}>
+              {currentUser.telefono}
+            </RText>
+          </View>
+          <View style={styles.dataArea}>
+            <RText style={styles.dataText}>Correo:</RText>
+            <RText style={styles.dataText} tipo={"bold"}>
+              {currentUser.user.email}
+            </RText>
+          </View>
+          <View style={styles.dataArea}>
+            <RText style={styles.dataText}>Fecha de nacimiento:</RText>
+            <RText style={styles.dataText} tipo={"bold"}>
+              {currentUser.nacimiento.d}/{currentUser.nacimiento.m}/
+              {currentUser.nacimiento.a}
+            </RText>
+          </View> */}
+          <ProfileTab title={"Datos Importantes"} Svg={AccountSettings} />
+          <ProfileTab title={"Seguridad"} Svg={AccountSettings} />
+          <ProfileTab title={"Idioma"} Svg={AccountSettings} />
+          <ProfileTab title={"Politicas de Privacidad"} Svg={AccountSettings} />
+          <ProfileTab title={"Ayuda y soporte"} Svg={AccountSettings} />
+          <SecondaryButton
+            style={{ marginTop: 20 }}
+            callback={logOut}
+            width={0.8}
+          >
+            Cerrar sesión
+          </SecondaryButton>
         </View>
-        <View style={styles.dataArea}>
-          <RText style={styles.dataText}>Correo:</RText>
-          <RText style={styles.dataText} tipo={"bold"}>
-            {currentUser.user.email}
-          </RText>
-        </View>
-        <View style={styles.dataArea}>
-          <RText style={styles.dataText}>Fecha de nacimiento:</RText>
-          <RText style={styles.dataText} tipo={"bold"}>
-            {currentUser.nacimiento.d}/{currentUser.nacimiento.m}/
-            {currentUser.nacimiento.a}
-          </RText>
-        </View>
-        <SecondaryButton
-          style={{ marginTop: 20 }}
-          callback={logOut}
-          width={0.8}
-        >
-          Cerrar sesión
-        </SecondaryButton>
-      </View>
+      </ScrollView>
       <Navbar navigation={navigation} />
       {loading && (
         <View
@@ -134,13 +162,38 @@ export default function Profile({ navigation }) {
     </>
   );
 }
+const ProfileTab = ({ title, Svg }) => {
+  return (
+    <>
+      <View style={styles.profileTab}>
+        <Svg fill={"#d9d9d9"} />
+        <RText style={styles.profileTabTitle}>{title}</RText>
+      </View>
+    </>
+  );
+};
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    overflow: "scroll",
+  },
   header: {
     paddingHorizontal: 20,
     paddingVertical: 30,
     marginTop: 20,
     justifyContent: "center",
     alignItems: "center",
+  },
+  headerText: {
+    marginTop: 10,
+  },
+  headerTextNombre: {
+    fontSize: 30,
+    textAlign: "center",
+  },
+  headerTextEmail: {
+    fontSize: 15,
+    textAlign: "center",
   },
   titulo: {
     fontSize: 30,
@@ -155,6 +208,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     width: "100%",
+    paddingBottom: 50,
   },
   dataArea: {
     width: "90%",
@@ -205,5 +259,21 @@ const styles = StyleSheet.create({
   addPfpIndicatorText: {
     color: "white",
     fontSize: 15,
+  },
+  profileTab: {
+    width: "80%",
+    paddingVertical: 5,
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems: "center",
+  },
+  profileTabTitle: {
+    marginLeft: 5,
+  },
+  hr: {
+    width: "100%",
+    height: 1,
+    backgroundColor: "#00000077",
+    marginBottom: 20,
   },
 });

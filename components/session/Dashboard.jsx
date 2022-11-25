@@ -4,6 +4,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from "react-native";
 import React, { useState } from "react";
 import RText from "../RText";
@@ -13,25 +14,17 @@ import paid from "../../assets/paid.png";
 import send from "../../assets/send.png";
 import data from "../../assets/data.png";
 import download from "../../assets/download.png";
-import PfpImage from "./PfpImage";
 import CurrentTokenSvg from "./CurrentTokenSvg";
 import { useBlockChainContext } from "../../context/BlockchainContext";
-import Popup from "./Popup";
+import Popup from "../Popup";
 import SelectToken from "./SelectToken";
 import MainButton from "../buttons";
 import MainWalletButton from "./Wallet/MainWalletButton";
 export default function Dashboard({ navigation }) {
-  const { currentUser, balance, balanceTotal, historic } = useAuth();
+  const { balanceTotal, historic } = useAuth();
   const { token } = useBlockChainContext();
-  const [FTXStatus, setFTXStatus] = useState("");
   const [show, setShow] = useState();
-  const connectFTX = () => {
-    if (FTXStatus === "Conectado a FTX") return;
-    setFTXStatus("Conectando con FTX...");
-    setTimeout(() => {
-      setFTXStatus("Conectado a FTX");
-    }, 3000);
-  };
+
   return (
     <>
       <ScrollView style={styles.container}>
@@ -47,30 +40,30 @@ export default function Dashboard({ navigation }) {
             <RText style={{ fontSize: 20, textAlign: "center" }} tipo={"thin"}>
               Balance total de la cuenta
             </RText>
-            <RText style={styles.titulo}>
-              {balanceTotal[token] ? (
-                <>
-                  {parseFloat(balanceTotal[token]).toFixed(
-                    Math.max(
-                      2,
-                      (balanceTotal[token].toString().split(".")[1] || [])
-                        .length
-                    )
-                  )}{" "}
-                  <CurrentTokenSvg height={20} width={20} />
-                </>
-              ) : (
-                <>
-                  {balanceTotal[token] === 0 ? (
-                    <>
-                      0.00 <CurrentTokenSvg height={20} width={20} />
-                    </>
-                  ) : (
-                    "Cargando"
-                  )}
-                </>
-              )}
-            </RText>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <RText style={styles.titulo}>
+                {balanceTotal[token] ? (
+                  <>
+                    {parseFloat(balanceTotal[token]).toFixed(
+                      Math.max(
+                        2,
+                        (balanceTotal[token].toString().split(".")[1] || [])
+                          .length
+                      )
+                    )}{" "}
+                  </>
+                ) : (
+                  <>{balanceTotal[token] === 0 ? <>0.00</> : "Cargando"}</>
+                )}{" "}
+              </RText>
+              <CurrentTokenSvg height={20} width={20} />
+            </View>
           </TouchableOpacity>
           <MainWalletButton width={0.9} customStyles={{ marginBottom: 20 }} />
           <View
@@ -145,7 +138,7 @@ export default function Dashboard({ navigation }) {
                   return (
                     <View key={doc.date} style={styles.historicDoc}>
                       <View>
-                        <RText>{doc.nota}</RText>
+                        <RText>{doc.tipo}</RText>
                         <RText tipo={"thin"} style={{ marginTop: 5 }}>
                           {doc.date.toDate().toDateString()}
                         </RText>
@@ -160,7 +153,16 @@ export default function Dashboard({ navigation }) {
                 })}
               </>
             ) : (
-              <></>
+              <>
+                <View style={styles.emptyHistoryContainer}>
+                  <RText style={styles.emptyHistory}>
+                    No haz realizado ningun movimiento aún
+                  </RText>
+                  <RText tipo={"thin"} style={{ textAlign: "center" }}>
+                    Envia o recibe tokens y esas operaciones apareceran acá
+                  </RText>
+                </View>
+              </>
             )}
           </View>
         </View>
@@ -287,5 +289,16 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  emptyHistory: {
+    textAlign: "center",
+    fontSize: 25,
+    marginBottom: 20,
+  },
+  emptyHistoryContainer: {
+    backgroundColor: "#d9d9d9",
+    borderRadius: 20,
+    padding: 30,
+    marginTop: 10,
   },
 });

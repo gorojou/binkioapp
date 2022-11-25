@@ -5,6 +5,7 @@ import MainButton, { SecondaryButton } from "../../buttons";
 import Loader from "../../Loader";
 import useAuth from "../../../context/AuthContext";
 import s from "../../styles";
+import { useLocalAuth } from "../../../context/LocalAuthentication";
 export default function TestMnemonic({
   mnemonic,
   setdisplayTest,
@@ -12,6 +13,7 @@ export default function TestMnemonic({
   wallet,
 }) {
   const [constructedPhrase, setConstructedPhrase] = useState([]);
+  const { requireAuth } = useLocalAuth();
   const [randomPhrase, setRandomPhrase] = useState([]);
   const [correct, setCorrect] = useState(false);
   const [err, setErr] = useState();
@@ -44,8 +46,8 @@ export default function TestMnemonic({
     return array;
   }
   const saveWallet = async (wallet, name) => {
+    setLoading(true);
     try {
-      setLoading(true);
       await createWallet(wallet, name);
     } catch (err) {
       console.log(err);

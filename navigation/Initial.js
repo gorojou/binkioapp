@@ -8,7 +8,6 @@ import useAuth from "../context/AuthContext";
 import SelectType from "../components/session/SelectType";
 import Wallet from "../components/session/Wallet";
 import Profile from "../components/session/Profile";
-import FTXProvider from "../context/FTXContext";
 import SolicitudCredito from "../components/session/SolicitudCredito";
 import Enviar from "../components/session/Enviar";
 import Garantia from "../components/session/Garantia";
@@ -20,6 +19,8 @@ import PopupProvider from "../context/Popup";
 import Presentation from "../components/Presentation";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import PinForm from "../components/session/PinForm";
+import LocalAuthenticationProvider from "../context/LocalAuthentication";
+import TermsAndConditions from "../components/session/TermsAndConditions";
 const Stack = createNativeStackNavigator();
 
 const MyStack = () => {
@@ -32,7 +33,7 @@ const MyStack = () => {
     app();
   }, []);
   return (
-    <FTXProvider>
+    <LocalAuthenticationProvider>
       <BlockchainContext>
         <PopupProvider>
           <NavigationContainer>
@@ -48,63 +49,74 @@ const MyStack = () => {
                 <>
                   {currentUser.type ? (
                     <>
-                      {currentUser.verified ? (
+                      {currentUser.terminosYCondiciones ? (
                         <>
-                          {currentUser.pin ? (
+                          {currentUser.verified ? (
                             <>
-                              {wallets ? (
+                              {currentUser.pin ? (
                                 <>
-                                  <Stack.Screen
-                                    name="dash"
-                                    component={Dashboard}
-                                  />
-                                  <Stack.Screen
-                                    name="profile"
-                                    component={Profile}
-                                  />
-                                  <Stack.Screen
-                                    name="wallet"
-                                    component={Wallet}
-                                  />
-                                  <Stack.Screen
-                                    name="solicitud"
-                                    component={SolicitudCredito}
-                                  />
-                                  <Stack.Screen
-                                    name="enviar"
-                                    component={Enviar}
-                                  />
-                                  <Stack.Screen
-                                    name="garantia"
-                                    component={Garantia}
-                                  />
-                                  <Stack.Screen
-                                    name="recibir"
-                                    component={Recibir}
-                                  />
+                                  {wallets ? (
+                                    <>
+                                      <Stack.Screen
+                                        name="dash"
+                                        component={Dashboard}
+                                      />
+                                      <Stack.Screen
+                                        name="profile"
+                                        component={Profile}
+                                      />
+                                      <Stack.Screen
+                                        name="wallet"
+                                        component={Wallet}
+                                      />
+                                      <Stack.Screen
+                                        name="solicitud"
+                                        component={SolicitudCredito}
+                                      />
+                                      <Stack.Screen
+                                        name="enviar"
+                                        component={Enviar}
+                                      />
+                                      <Stack.Screen
+                                        name="garantia"
+                                        component={Garantia}
+                                      />
+                                      <Stack.Screen
+                                        name="recibir"
+                                        component={Recibir}
+                                      />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Stack.Screen
+                                        name="createWallet"
+                                        component={OnRegister}
+                                        options={{ showNav: true }}
+                                      />
+                                    </>
+                                  )}
                                 </>
                               ) : (
                                 <>
                                   <Stack.Screen
-                                    name="createWallet"
-                                    component={OnRegister}
-                                    options={{ showNav: true }}
+                                    name="pinform"
+                                    component={PinForm}
                                   />
                                 </>
                               )}
                             </>
                           ) : (
                             <>
-                              <Stack.Screen
-                                name="pinform"
-                                component={PinForm}
-                              />
+                              <Stack.Screen name="kyc" component={KYC} />
                             </>
                           )}
                         </>
                       ) : (
                         <>
-                          <Stack.Screen name="kyc" component={KYC} />
+                          <Stack.Screen
+                            name="termsAndConditions"
+                            component={TermsAndConditions}
+                          />
                         </>
                       )}
                     </>
@@ -138,7 +150,7 @@ const MyStack = () => {
           </NavigationContainer>
         </PopupProvider>
       </BlockchainContext>
-    </FTXProvider>
+    </LocalAuthenticationProvider>
   );
 };
 export default MyStack;

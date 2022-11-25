@@ -1,4 +1,10 @@
-import { View, StyleSheet, TouchableOpacity, TextInput } from "react-native";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import RText from "../../RText";
 import MainButton, { SecondaryButton } from "../../buttons";
@@ -16,27 +22,29 @@ export default function Wallet({ navigation, route }) {
 
   return (
     <>
-      <View style={styles.formulario}>
-        <View style={{ width: "90%", alignItems: "center" }}>
-          <RText style={{ ...styles.formTitle, marginTop: 20 }}>
-            Tu Wallet
-          </RText>
-          <RText style={styles.sessionTitle} tipo={"thin"}>
-            Tu wallet es asignada al crear una cuenta
-          </RText>
-          <View style={{ width: "90%" }}>
-            <CopyToClipboard value={mainWallet.wallet} />
+      <ScrollView style={s.container}>
+        <View style={styles.formulario}>
+          <View style={{ width: "100%", alignItems: "center" }}>
+            <RText style={{ ...styles.formTitle, marginTop: 20 }}>
+              Tu Wallet
+            </RText>
+            <RText style={styles.sessionTitle} tipo={"thin"}>
+              Tu wallet es asignada al crear una cuenta
+            </RText>
+            <View style={{ width: "90%" }}>
+              <CopyToClipboard value={mainWallet.wallet} />
+            </View>
+            <WalletList setShowWallet={setShowWallet} walletSection={true} />
+            {loading && <Loader size={100} />}
           </View>
-          <WalletList setShowWallet={setShowWallet} walletSection={true} />
-          {loading && <Loader size={100} />}
+          {showWallet && (
+            <PopUpMnemonic
+              setShowWallet={setShowWallet}
+              showWallet={showWallet}
+            />
+          )}
         </View>
-        {showWallet && (
-          <PopUpMnemonic
-            setShowWallet={setShowWallet}
-            showWallet={showWallet}
-          />
-        )}
-      </View>
+      </ScrollView>
       <Navbar navigation={navigation} />
     </>
   );
@@ -59,10 +67,10 @@ const PopUpMnemonic = ({ setShowWallet, showWallet }) => {
       const storedWallets = JSON.parse(
         await SecureStore.getItemAsync("wallets")
       );
-
       const selectedWallet = storedWallets.filter((wallet) => {
         return wallet.pub == showWallet.wallet;
       });
+      console.log(selectedWallet);
       setData({
         mnemonic: selectedWallet[0].m,
         privKey: selectedWallet[0].priv,

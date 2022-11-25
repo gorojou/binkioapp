@@ -1,10 +1,10 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import React, { useState, useContext } from "react";
+import Close from "../assets/svg/close.svg";
 const PopupContext = React.createContext();
 export function usePopup() {
   return useContext(PopupContext);
 }
-
 export default function PopupProvider({ children }) {
   const [show, setShow] = useState();
   const [component, setComponent] = useState(false);
@@ -36,7 +36,12 @@ const Popup = ({ children, setShow, closingValue }) => {
             e.stopPropagation();
           }}
         >
-          {children}
+          <View style={styles.closeSection}>
+            <TouchableOpacity onPress={() => setShow(false)}>
+              <Close fill={"#F44F46"} width={20} height={20} />
+            </TouchableOpacity>
+          </View>
+          <View style={{ padding: 15 }}>{children}</View>
         </View>
       </TouchableOpacity>
     </>
@@ -72,7 +77,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 2.5,
     elevation: 11,
     backgroundColor: "white",
-    padding: 15,
     borderRadius: 20,
+    overflow: "hidden",
+  },
+  closeSection: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingRight: 10,
+    paddingTop: 10,
   },
 });

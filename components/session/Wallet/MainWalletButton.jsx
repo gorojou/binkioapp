@@ -3,7 +3,7 @@ import RText from "../../RText";
 import React, { useState } from "react";
 import Wallet from "../../../assets/svg/wallet.svg";
 import useAuth from "../../../context/AuthContext";
-import Popup from "../Popup";
+import Popup from "../../Popup";
 import { usePopup } from "../../../context/Popup";
 import WalletList from "./WalletList";
 import { useBlockChainContext } from "../../../context/BlockchainContext";
@@ -36,21 +36,29 @@ export default function MainWalletButton({ width, customStyles }) {
             {mainWallet && (
               <>
                 <RText style={styles.walletName}>{mainWallet.name}</RText>
-                <RText style={styles.balance} tipo={"thin"}>
-                  {mainWallet.balance
-                    ? parseFloat(mainWallet.balance[token]).toFixed(
-                        Math.max(
-                          2,
-                          (
-                            mainWallet.balance[token]
-                              .toString()
-                              .split(".")[1] || []
-                          ).length
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <RText style={styles.balance} tipo={"thin"}>
+                    {mainWallet.balance
+                      ? parseFloat(mainWallet.balance[token]).toFixed(
+                          Math.max(
+                            2,
+                            (
+                              mainWallet.balance[token]
+                                .toString()
+                                .split(".")[1] || []
+                            ).length
+                          )
                         )
-                      )
-                    : "Cargando"}{" "}
+                      : "Cargando"}{" "}
+                  </RText>
                   <CurrentTokenSvg height={8} width={8} />
-                </RText>
+                </View>
               </>
             )}
           </View>

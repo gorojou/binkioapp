@@ -50,7 +50,9 @@ export function AuthProvider({ children, navigation }) {
           name: name,
           pub: wallet.address,
           m: wallet.imported ? "" : wallet._mnemonic().phrase,
-          priv: wallet.imported ? wallet.privKey : wallet._mnemonic().phrase,
+          priv: wallet.imported
+            ? wallet.privKey
+            : wallet._signingKey().privateKey,
         },
       ];
       if (savedWallets) newWallet = [...newWallet, ...savedWallets];
@@ -118,26 +120,25 @@ export function AuthProvider({ children, navigation }) {
       .collection("wallets")
       .doc(wallet);
     try {
-      await walletDocRef.get().then(async (wallet) => {
-        console.log(wallet.data());
+      await walletDocRef.get().then(async (walletDoc) => {
         await walletDocRef.delete();
         const storedWalletData = await SecureStore.getItemAsync("wallets");
         if (storedWalletData) {
           const newStoredWallets = JSON.parse(storedWalletData).filter(
-            (wallet) => wallet.wallet != wallet.data().wallet
+            (walletInstance) => {
+              return walletInstance.pub != walletDoc.data().wallet;
+            }
           );
-          console.log(newStoredWallets);
           await SecureStore.setItemAsync(
             "wallets",
             JSON.stringify(newStoredWallets)
           );
         }
-        console.log(wallet.data());
-        if (!wallet.data().main) return updateProfile();
+        if (!walletDoc.data().main) return updateProfile();
         await firebase
           .firestore()
           .collection("users")
-          .doc(currentUser.uid)
+          .doc(currentUser.user.uid)
           .collection("wallets")
           .where("main", "==", false)
           .limit(1)
@@ -147,7 +148,7 @@ export function AuthProvider({ children, navigation }) {
             await newMainWallet.forEach(async (mainWallet) => {
               await mainWallet.ref.update({ main: true });
               setUserMainWallet(mainWallet.data());
-              updateProfile();
+              await updateProfile();
             });
           });
       });
@@ -257,6 +258,12 @@ export function AuthProvider({ children, navigation }) {
         throw { message: "Correo ingresado ya esta registrado" };
       throw err;
     }
+  };
+  const updateTermsAndConditionsAcceptance = async () => {
+    await firestore
+      .collection("users")
+      .doc(currentUser.user.uid)
+      .update({ terminosYCondiciones: true });
   };
   const savePin = async (pin) => {
     const userDoc = await firestore
@@ -386,6 +393,7 @@ export function AuthProvider({ children, navigation }) {
     deleteWallet,
     setWallets,
     historic,
+    updateTermsAndConditionsAcceptance,
   };
   return (
     <AuthContext.Provider value={value}>
