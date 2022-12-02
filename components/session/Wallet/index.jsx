@@ -16,7 +16,7 @@ import s from "../../styles";
 import * as SecureStore from "expo-secure-store";
 import WalletList from "./WalletList";
 export default function Wallet({ navigation, route }) {
-  const { currentUser, createWallet, wallets, mainWallet } = useAuth();
+  const { mainWalletETH, mainWalletBTC } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showWallet, setShowWallet] = useState();
 
@@ -32,13 +32,13 @@ export default function Wallet({ navigation, route }) {
               Tu wallet es asignada al crear una cuenta
             </RText>
             <View style={{ width: "90%" }}>
-              <CopyToClipboard value={mainWallet.wallet} />
+              <CopyToClipboard value={mainWalletBTC.wallet} />
             </View>
             <WalletList setShowWallet={setShowWallet} walletSection={true} />
             {loading && <Loader size={100} />}
           </View>
           {showWallet && (
-            <PopUpMnemonic
+            <WalletRevealPopup
               setShowWallet={setShowWallet}
               showWallet={showWallet}
             />
@@ -49,7 +49,7 @@ export default function Wallet({ navigation, route }) {
     </>
   );
 }
-const PopUpMnemonic = ({ setShowWallet, showWallet }) => {
+const WalletRevealPopup = ({ setShowWallet, showWallet }) => {
   const [confirm, setConfirm] = useState(false);
   const [passConfirmed, setPassConfirmed] = useState(false);
   const [pass, setPass] = useState();
@@ -65,7 +65,7 @@ const PopUpMnemonic = ({ setShowWallet, showWallet }) => {
     const storedPass = await SecureStore.getItemAsync("USER_PASS");
     if (storedPass === pass) {
       const storedWallets = JSON.parse(
-        await SecureStore.getItemAsync("wallets")
+        await SecureStore.getItemAsync(`${showWallet.tipo}Wallets`)
       );
       const selectedWallet = storedWallets.filter((wallet) => {
         return wallet.pub == showWallet.wallet;
@@ -189,7 +189,8 @@ const styles = StyleSheet.create({
   formulario: {
     justifyContent: "center",
     alignItems: "center",
-    flex: 1,
+    // flex: 1,
+    paddingBottom: 40,
   },
   formTitle: {
     fontSize: 30,

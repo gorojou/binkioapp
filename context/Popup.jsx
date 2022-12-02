@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import React, { useState, useContext } from "react";
 import Close from "../assets/svg/close.svg";
+import Popup from "../components/Popup";
 const PopupContext = React.createContext();
 export function usePopup() {
   return useContext(PopupContext);
@@ -22,31 +23,31 @@ export default function PopupProvider({ children }) {
   );
 }
 
-const Popup = ({ children, setShow, closingValue }) => {
-  return (
-    <>
-      <TouchableOpacity
-        style={styles.popUpContainer}
-        onPress={() => setShow && setShow(closingValue ? closingValue : false)}
-      >
-        <View
-          style={styles.popup}
-          onStartShouldSetResponder={(event) => true}
-          onTouchEnd={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <View style={styles.closeSection}>
-            <TouchableOpacity onPress={() => setShow(false)}>
-              <Close fill={"#F44F46"} width={20} height={20} />
-            </TouchableOpacity>
-          </View>
-          <View style={{ padding: 15 }}>{children}</View>
-        </View>
-      </TouchableOpacity>
-    </>
-  );
-};
+// const Popup = ({ children, setShow, closingValue }) => {
+//   return (
+//     <>
+//       <TouchableOpacity
+//         style={styles.popUpContainer}
+//         onPress={() => setShow && setShow(closingValue ? closingValue : false)}
+//       >
+//         <View
+//           style={styles.popup}
+//           onStartShouldSetResponder={(event) => true}
+//           onTouchEnd={(e) => {
+//             e.stopPropagation();
+//           }}
+//         >
+//           <View style={styles.closeSection}>
+//             <TouchableOpacity onPress={() => setShow(false)}>
+//               <Close fill={"#F44F46"} width={20} height={20} />
+//             </TouchableOpacity>
+//           </View>
+//           <View style={{ padding: 15 }}>{children}</View>
+//         </View>
+//       </TouchableOpacity>
+//     </>
+//   );
+// };
 const styles = StyleSheet.create({
   popUpContainer: {
     position: "absolute",

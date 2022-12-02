@@ -1,27 +1,35 @@
-import { View, Text, StyleSheet, TextInput } from "react-native";
-import RText from "../../RText";
+import { View, Text, StyleSheet, TextInput, Alert } from "react-native";
+import RText from "../../../RText";
 import React, { useState, useEffect } from "react";
-import useAuth from "../../../context/AuthContext";
-import { useBlockChainContext } from "../../../context/BlockchainContext";
-import SelectWallet from "./SelectWallet";
-import { SecondaryButton } from "../../buttons";
+import useAuth from "../../../../context/AuthContext";
+import { useBlockChainContext } from "../../../../context/BlockchainContext";
+import SelectWallet from "./SelectWalletMethod";
+import { SecondaryButton } from "../../../buttons";
 import TestMnemonic from "./TestMnemonic";
-import CopyToClipboard from "../../CopyToClipboard";
-import s from "../../styles";
-import Eye from "../../../assets/svg/eyeHidden.svg";
-import Loader from "../../Loader";
+import CopyToClipboard from "../../../CopyToClipboard";
+import s from "../../../styles";
+import Eye from "../../../../assets/svg/eyeHidden.svg";
+import Loader from "../../../Loader";
 import ImportWallet from "./ImportWallet";
-import { useLocalAuth } from "../../../context/LocalAuthentication";
-export default function OnRegister({ confirmWallet }) {
-  const { createRandomWallet } = useBlockChainContext();
+import { useLocalAuth } from "../../../../context/LocalAuthentication";
+export default function WalletCreation({
+  confirmWallet,
+  walletType,
+  setGenerateType,
+  setWallets,
+}) {
+  const { createRandomWalletEth, createRandomWalletBtc } =
+    useBlockChainContext();
   const [wallet, setWallet] = useState();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [type, setType] = useState();
-  console.log(confirmWallet);
   const createUserWallet = async () => {
-    const wallet = await createRandomWallet();
-    setWallet(wallet);
+    const wallet =
+      walletType === "btc"
+        ? await createRandomWalletBtc()
+        : await createRandomWalletEth();
+    setWallet({ ...wallet, tipo: walletType });
   };
   const create = async (typeOfW) => {
     if (typeOfW === "generate") await createUserWallet();
@@ -29,7 +37,7 @@ export default function OnRegister({ confirmWallet }) {
   };
   return (
     <>
-      <View style={[styles.formulario, !confirmWallet && { flex: 1 }]}>
+      <View style={[styles.formulario, !confirmWallet && { marginBottom: 40 }]}>
         <View
           style={{
             alignItems: "center",
@@ -38,22 +46,30 @@ export default function OnRegister({ confirmWallet }) {
         >
           {type === "import" ? (
             <>
-              <ImportWallet />
+              <ImportWallet
+                confirmWallet={confirmWallet}
+                setWallets={setWallets}
+                setGenerateType={setGenerateType}
+                walletType={walletType}
+              />
             </>
           ) : (
             <>
               {wallet ? (
                 <>
                   <CheckNewWallet
-                    mnemonic={wallet._mnemonic().phrase}
+                    mnemonic={wallet.mnemonic}
                     wallet={wallet}
+                    walletType={walletType}
                     confirmWallet={confirmWallet}
+                    setGenerateType={setGenerateType}
+                    setWallets={setWallets}
                   />
                 </>
               ) : (
                 <>
                   <RText style={{ ...styles.formTitle, marginTop: 20 }}>
-                    ¡Crea una nueva wallet!
+                    Crear wallet {walletType === "btc" ? "Bitcoin" : "Ethereum"}
                   </RText>
                   <RText style={styles.sessionTitle} tipo={"thin"}>
                     Guarda todos los datos de tu wallet en un lugar seguro
@@ -69,31 +85,74 @@ export default function OnRegister({ confirmWallet }) {
     </>
   );
 }
-const CheckNewWallet = ({ mnemonic, wallet, confirmWallet }) => {
+const CheckNewWallet = ({
+  mnemonic,
+  wallet,
+  confirmWallet,
+  setWallets,
+  walletType,
+  setGenerateType,
+}) => {
+  const [resolver, setResolver] = useState({ resolver: null });
   const [hide, setHide] = useState(true);
   const [displayTest, setdisplayTest] = useState(false);
   const [nombre, setNombre] = useState();
   const [err, setErr] = useState();
   const [loading, setLoading] = useState(false);
-  const { createWallet } = useAuth();
   const { requireAuth } = useLocalAuth();
-  const continueToTest = async () => {
+  const { updateProfile, uploadWallet } = useAuth();
+
+  const createPromise = () => {
+    let resolver;
+    return [
+      new Promise((resolve, reject) => {
+        resolver = resolve;
+      }),
+      resolver,
+    ];
+  };
+
+  const acceptWallet = async () => {
     setErr("");
-    console.log(wallet);
     if (!nombre) return setErr("Colocale Nombre a tu wallet");
     if (confirmWallet) {
-      return await saveWallet();
+      if (!(await displayTestHandler())) return;
+      await saveWallet();
     }
-    setdisplayTest(true);
+    setLoading(true);
+    try {
+      await uploadWallet(wallet, nombre, walletType);
+      await updateProfile();
+    } catch (err) {
+      console.log(err);
+      setErr("Algo salio mal intenta nuevamente");
+      setLoading(false);
+    }
   };
+
+  const displayTestHandler = async () => {
+    const [promise, resolve] = await createPromise();
+    setdisplayTest(true);
+    setResolver({ resolve });
+    return promise;
+  };
+
+  const passed = async (status) => {
+    setdisplayTest(false);
+    resolver.resolve(status);
+  };
+
   const saveWallet = async () => {
     try {
       setLoading(true);
-      if (!(await requireAuth())) {
+      if (!confirmWallet && !(await requireAuth())) {
         setLoading(false);
         return setErr("La autentificacion ha fallado");
       }
-      await createWallet(wallet, nombre);
+      setWallets((prev) => {
+        return { ...prev, [walletType]: { ...wallet, nombre } };
+      });
+      setGenerateType(null);
     } catch (err) {
       console.log(err);
       setLoading(false);
@@ -104,12 +163,7 @@ const CheckNewWallet = ({ mnemonic, wallet, confirmWallet }) => {
     <>
       {displayTest ? (
         <>
-          <TestMnemonic
-            setdisplayTest={setdisplayTest}
-            mnemonic={mnemonic}
-            nombre={nombre}
-            wallet={wallet}
-          />
+          <TestMnemonic passed={passed} mnemonic={mnemonic} />
         </>
       ) : (
         <>
@@ -166,7 +220,7 @@ const CheckNewWallet = ({ mnemonic, wallet, confirmWallet }) => {
           </View>
           <MainButton
             style={{ marginTop: 20 }}
-            callback={() => continueToTest()}
+            callback={() => acceptWallet()}
             width={1}
           >
             Siguiente

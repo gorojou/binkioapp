@@ -6,6 +6,7 @@ import { StyleSheet, Text, View, SafeAreaView, StatusBar } from "react-native";
 import Initial from "./navigation/Initial";
 import TitleLogo from "./components/TitleLogo";
 import { AuthProvider } from "./context/AuthContext";
+import HeaderProvider from "./context/HeaderContext";
 export default function App() {
   return (
     <SafeAreaView
@@ -17,9 +18,9 @@ export default function App() {
       }}
     >
       <AuthProvider>
-        <View style={styles.titleContainer}>
+        {/* <View style={styles.titleContainer}>
           <TitleLogo />
-        </View>
+        </View> */}
         <Initial />
       </AuthProvider>
     </SafeAreaView>

@@ -24,9 +24,10 @@ export function AuthProvider({ children, navigation }) {
     wbtc: null,
     usdt: null,
   });
-  const [wallets, setWallets] = useState();
-  const [mainWallet, setMainWallet] = useState();
-  const [historic, setHistoric] = useState();
+  const [walletsETH, setWalletsETH] = useState();
+  const [mainWalletETH, setMainWalletETH] = useState();
+  const [walletsBTC, setWalletsBTC] = useState();
+  const [mainWalletBTC, setMainWalletBTC] = useState();
   const logIn = async (email, password) => {
     try {
       await SecureStore.setItemAsync("USER_EMAIL", email);
@@ -40,54 +41,56 @@ export function AuthProvider({ children, navigation }) {
       throw err;
     }
   };
-  const createWallet = async (wallet, name) => {
+  const uploadWallet = async (wallet, name, type) => {
     try {
+      await addNewWallet(wallet.address, name, type);
       const savedWallets = JSON.parse(
-        await SecureStore.getItemAsync("wallets")
+        await SecureStore.getItemAsync(`${type}Wallets`)
       );
       let newWallet = [
         {
           name: name,
           pub: wallet.address,
-          m: wallet.imported ? "" : wallet._mnemonic().phrase,
-          priv: wallet.imported
-            ? wallet.privKey
-            : wallet._signingKey().privateKey,
+          m: wallet.imported ? "" : wallet.mnemonic,
+          priv: wallet.privateKey,
+          tipo: type,
         },
       ];
       if (savedWallets) newWallet = [...newWallet, ...savedWallets];
-      await SecureStore.setItemAsync("wallets", JSON.stringify(newWallet));
-      await addNewWallet(wallet.address, name);
-      await updateProfile();
+      await SecureStore.setItemAsync(
+        `${type}Wallets`,
+        JSON.stringify(newWallet)
+      );
     } catch (err) {
       console.log(err);
       throw err;
     }
   };
 
-  const addNewWallet = async (wallet, name) => {
-    if (!ethers.utils.isAddress(wallet)) throw { message: "Wallet invalida" };
-    if (wallets && wallets.length > 5)
+  const addNewWallet = async (wallet, name, type) => {
+    if (type === "eht" && !ethers.utils.isAddress(wallet))
+      throw { message: "Wallet invalida" };
+    if (walletsETH && walletsETH.length > 5)
       throw { message: "Ya tienes la cantidad maxima de wallets disponibles" };
     const matchName = await firebase
       .firestore()
       .collection("users")
       .doc(currentUser.user.uid)
-      .collection("wallets")
+      .collection(`${type}Wallets`)
       .where("name", "==", name)
       .get();
     const matchWallet = await firebase
       .firestore()
       .collection("users")
       .doc(currentUser.user.uid)
-      .collection("wallets")
+      .collection(`${type}Wallets`)
       .where("wallet", "==", wallet)
       .get();
     const matchMain = await firebase
       .firestore()
       .collection("users")
       .doc(currentUser.user.uid)
-      .collection("wallets")
+      .collection(`${type}Wallets`)
       .where("main", "==", true)
       .get();
 
@@ -97,12 +100,13 @@ export function AuthProvider({ children, navigation }) {
       .firestore()
       .collection("users")
       .doc(currentUser.user.uid)
-      .collection("wallets")
+      .collection(`${type}Wallets`)
       .doc(wallet)
       .set({
         name: name,
         wallet: wallet,
         main: matchMain.empty,
+        tipo: type,
       })
       .then(() => {
         return true;
@@ -112,17 +116,19 @@ export function AuthProvider({ children, navigation }) {
       });
   };
 
-  const deleteWallet = async (wallet) => {
+  const deleteWallet = async (wallet, type) => {
     var walletDocRef = firebase
       .firestore()
       .collection("users")
       .doc(currentUser.user.uid)
-      .collection("wallets")
+      .collection(`${type}Wallets`)
       .doc(wallet);
     try {
       await walletDocRef.get().then(async (walletDoc) => {
         await walletDocRef.delete();
-        const storedWalletData = await SecureStore.getItemAsync("wallets");
+        const storedWalletData = await SecureStore.getItemAsync(
+          `${type}Wallets`
+        );
         if (storedWalletData) {
           const newStoredWallets = JSON.parse(storedWalletData).filter(
             (walletInstance) => {
@@ -130,16 +136,16 @@ export function AuthProvider({ children, navigation }) {
             }
           );
           await SecureStore.setItemAsync(
-            "wallets",
+            `${type}Wallets`,
             JSON.stringify(newStoredWallets)
           );
         }
-        if (!walletDoc.data().main) return updateProfile();
+        if (!walletDoc.data().main) return await updateProfile();
         await firebase
           .firestore()
           .collection("users")
           .doc(currentUser.user.uid)
-          .collection("wallets")
+          .collection(`${type}Wallets`)
           .where("main", "==", false)
           .limit(1)
           .get()
@@ -157,6 +163,63 @@ export function AuthProvider({ children, navigation }) {
     }
   };
 
+  const getUserHistory = async (dash) => {
+    const userHistoric = await firestore
+      .collection("users")
+      .doc(currentUser.user.uid)
+      .collection("historic")
+      .orderBy("date", "desc");
+    let arr = [];
+    if (dash) {
+      const historicDoc = await userHistoric.limit(5).get();
+      historicDoc.forEach((history) => {
+        arr.push(history.data());
+      });
+    } else {
+      const historicDoc = await userHistoric.get();
+      historicDoc.forEach((history) => {
+        arr.push(history.data());
+      });
+    }
+    return arr;
+  };
+
+  const getUserWallets = async (type, user) => {
+    const userWallets = await firestore
+      .collection("users")
+      .doc(user ? user.uid : currentUser.user.uid)
+      .collection(`${type}Wallets`)
+      .orderBy("main", "desc")
+      .get();
+    if (!userWallets.empty) {
+      let arr = [];
+      let main;
+      await userWallets.forEach((doc) => {
+        if (doc.data().main) main = doc.data();
+        arr.push(doc.data());
+      });
+      if (!main) {
+        await firebase
+          .firestore()
+          .collection("users")
+          .doc(user ? user.uid : currentUser.user.uid)
+          .collection(`${type}Wallets`)
+          .doc(arr[0].wallet)
+          .update({ main: true })
+          .then((doc) => {
+            main = { ...arr[0], main: true };
+          });
+      }
+      if (type === "eth") {
+        setMainWalletETH(main);
+        setWalletsETH(arr);
+        return;
+      }
+      setMainWalletBTC(main);
+      setWalletsBTC(arr);
+    }
+  };
+
   const updateProfile = async (silent, user) => {
     if (!silent) setLoading(true);
     try {
@@ -164,51 +227,12 @@ export function AuthProvider({ children, navigation }) {
         .collection("users")
         .doc(user ? user.uid : currentUser.user.uid)
         .get();
-      const userWallets = await firestore
-        .collection("users")
-        .doc(user ? user.uid : currentUser.user.uid)
-        .collection("wallets")
-        .orderBy("main", "desc")
-        .get();
-      const userHistoric = await firestore
-        .collection("users")
-        .doc(user ? user.uid : currentUser.user.uid)
-        .collection("historic")
-        .orderBy("date", "desc")
-        .get();
-      if (!userHistoric.empty) {
-        let historic = [];
-        userHistoric.forEach((doc) => {
-          historic.push(doc.data());
-        });
-        setHistoric(historic);
-      }
-      if (!userWallets.empty) {
-        let arr = [];
-        let main;
-        await userWallets.forEach((doc) => {
-          if (doc.data().main) main = doc.data();
-          arr.push(doc.data());
-        });
-        if (!main) {
-          await firebase
-            .firestore()
-            .collection("users")
-            .doc(user ? user.uid : currentUser.user.uid)
-            .collection("wallets")
-            .doc(arr[0].wallet)
-            .update({ main: true })
-            .then((doc) => {
-              main = { ...arr[0], main: true };
-            });
-        }
-        setMainWallet(main);
-        setWallets(arr);
-      }
       setCurrentUser({
         user: user ? user : currentUser.user,
         ...userDoc.data(),
       });
+      await getUserWallets("eth", user);
+      await getUserWallets("btc", user);
       setLoading(false);
     } catch (err) {
       console.log(err);
@@ -228,6 +252,25 @@ export function AuthProvider({ children, navigation }) {
       .update({ type: type });
     await updateProfile();
     return doc;
+  };
+  const updateUser = async (telefono, nombre, dia, mes, year) => {
+    try {
+      const userDocRef = await firestore
+        .collection("users")
+        .doc(currentUser.user.uid)
+        .update({
+          telefono,
+          nombre,
+          nacimiento: {
+            d: dia,
+            m: mes,
+            a: year,
+          },
+        });
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
   };
   const signUp = async (email, password, telefono, nombre, dia, mes, year) => {
     try {
@@ -272,11 +315,19 @@ export function AuthProvider({ children, navigation }) {
       .update({ pin: pin });
     await updateProfile();
   };
-  const logOut = async (goToStart) => {
+  const logOut = async () => {
     setLoading(true);
-    await SecureStore.deleteItemAsync("USER_EMAIL", {});
-    await SecureStore.deleteItemAsync("USER_PASS", {});
-    await auth.signOut();
+    try {
+      setLoading(true);
+      await SecureStore.deleteItemAsync("USER_EMAIL", {});
+      await SecureStore.deleteItemAsync("USER_PASS", {});
+      await auth.signOut();
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      console.log(err);
+      Alert.alert("Algo salio mal");
+    }
   };
   const transfer = async (amount, token, type, nota) => {
     if (amount > balanceTotal[token]) throw { message: "Saldo insuficiente" };
@@ -297,37 +348,30 @@ export function AuthProvider({ children, navigation }) {
       throw err;
     }
   };
-  const getWallet = async (wallet) => {
-    return await (
-      await firebase
-        .firestore()
-        .collection("users")
-        .doc(currentUser.user.uid)
-        .collection("wallets")
-        .doc(wallet)
-        .get()
-    ).data();
-  };
 
-  const setNewMainWallet = async (wallet) => {
+  const setNewMainWallet = async (wallet, type) => {
     var walletDocRef = firebase
       .firestore()
       .collection("users")
       .doc(currentUser.user.uid)
-      .collection("wallets")
+      .collection(`${type}Wallets`)
       .doc(wallet);
     var oldMainWalletRef = firebase
       .firestore()
       .collection("users")
       .doc(currentUser.user.uid)
-      .collection("wallets")
-      .doc(mainWallet.wallet);
+      .collection(`${type}Wallets`)
+      .doc(type === "btc" ? mainWalletBTC.wallet : mainWalletETH.wallet);
     try {
       await runTransaction(firebase.firestore(), async (transaction) => {
         const newWalletDoc = await transaction.get(walletDocRef);
         transaction.update(walletDocRef, { main: true });
         transaction.update(oldMainWalletRef, { main: false });
-        setMainWallet(newWalletDoc.data());
+        if (type === "eth") {
+          setMainWalletETH(newWalletDoc.data());
+        } else {
+          setMainWalletBTC(newWalletDoc.data());
+        }
       });
       await updateProfile(true);
     } catch (err) {
@@ -349,6 +393,8 @@ export function AuthProvider({ children, navigation }) {
   };
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      console.log(await SecureStore.getItemAsync("ethWallets"));
+      console.log(await SecureStore.getItemAsync("btcWallets"));
       setLoading(true);
       if (user) {
         try {
@@ -380,20 +426,25 @@ export function AuthProvider({ children, navigation }) {
     selectType,
     uploadPfp,
     updateProfile,
-    createWallet,
+    uploadWallet,
     transfer,
     balance,
-    wallets,
-    mainWallet,
+    walletsETH,
+    setWalletsETH,
+    mainWalletETH,
+    setMainWalletETH,
+    walletsBTC,
+    setWalletsBTC,
+    mainWalletBTC,
+    setMainWalletBTC,
     setBalance,
     setNewMainWallet,
-    setMainWallet,
     setBalanceTotal,
     balanceTotal,
     deleteWallet,
-    setWallets,
-    historic,
     updateTermsAndConditionsAcceptance,
+    getUserHistory,
+    updateUser,
   };
   return (
     <AuthContext.Provider value={value}>

@@ -17,7 +17,9 @@ export default function Navbar({ navigation }) {
       <TouchableOpacity onPress={() => navigation.navigate("wallet")}>
         <Wallet width={40} height={40} fill={"black"} />
       </TouchableOpacity>
-      <History width={40} height={40} fill={"black"} />
+      <TouchableOpacity onPress={() => navigation.navigate("historic")}>
+        <History width={40} height={40} fill={"black"} />
+      </TouchableOpacity>
       <TouchableOpacity onPress={() => navigation.navigate("profile")}>
         <PfpImage size={30} />
       </TouchableOpacity>

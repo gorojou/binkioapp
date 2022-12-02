@@ -9,7 +9,7 @@ import WalletList from "./WalletList";
 import { useBlockChainContext } from "../../../context/BlockchainContext";
 import CurrentTokenSvg from "../CurrentTokenSvg";
 export default function MainWalletButton({ width, customStyles }) {
-  const { mainWallet, balance } = useAuth();
+  const { mainWalletETH, mainWalletBTC, balance } = useAuth();
   const { token } = useBlockChainContext();
   const { setShow, setComponent } = usePopup();
   return (
@@ -33,32 +33,75 @@ export default function MainWalletButton({ width, customStyles }) {
             <Wallet fill={"#5d22fa"} height={40} width={40} />
           </View>
           <View style={styles.walletTextContainer}>
-            {mainWallet && (
+            {token !== "btc" ? (
               <>
-                <RText style={styles.walletName}>{mainWallet.name}</RText>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <RText style={styles.balance} tipo={"thin"}>
-                    {mainWallet.balance
-                      ? parseFloat(mainWallet.balance[token]).toFixed(
-                          Math.max(
-                            2,
-                            (
-                              mainWallet.balance[token]
-                                .toString()
-                                .split(".")[1] || []
-                            ).length
-                          )
-                        )
-                      : "Cargando"}{" "}
-                  </RText>
-                  <CurrentTokenSvg height={8} width={8} />
-                </View>
+                {mainWalletETH && (
+                  <>
+                    <RText style={styles.walletName}>
+                      {mainWalletETH.name}
+                    </RText>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <RText style={styles.balance} tipo={"thin"}>
+                        {mainWalletETH.balance
+                          ? mainWalletETH.balance[token] === 0
+                            ? "0.00"
+                            : parseFloat(mainWalletETH.balance[token]).toFixed(
+                                Math.max(
+                                  2,
+                                  (
+                                    mainWalletETH.balance[token]
+                                      .toString()
+                                      .split(".")[1] || []
+                                  ).length
+                                )
+                              )
+                          : "Cargando"}{" "}
+                      </RText>
+                      <CurrentTokenSvg height={8} width={8} />
+                    </View>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                {mainWalletBTC && (
+                  <>
+                    <RText style={styles.walletName}>
+                      {mainWalletBTC.name}
+                    </RText>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <RText style={styles.balance} tipo={"thin"}>
+                        {mainWalletBTC.balance
+                          ? mainWalletBTC.balance[token] === 0
+                            ? "0.00"
+                            : parseFloat(mainWalletBTC.balance[token]).toFixed(
+                                Math.max(
+                                  2,
+                                  (
+                                    mainWalletBTC.balance[token]
+                                      .toString()
+                                      .split(".")[1] || []
+                                  ).length
+                                )
+                              )
+                          : "Cargando"}{" "}
+                      </RText>
+                      <CurrentTokenSvg height={8} width={8} />
+                    </View>
+                  </>
+                )}
               </>
             )}
           </View>

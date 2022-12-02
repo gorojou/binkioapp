@@ -6,7 +6,7 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import RText from "../RText";
 import Navbar from "./Navbar";
 import useAuth from "../../context/AuthContext";
@@ -20,6 +20,7 @@ import Popup from "../Popup";
 import SelectToken from "./SelectToken";
 import MainButton from "../buttons";
 import MainWalletButton from "./Wallet/MainWalletButton";
+import Historic from "./Historic";
 export default function Dashboard({ navigation }) {
   const { balanceTotal, historic } = useAuth();
   const { token } = useBlockChainContext();
@@ -82,7 +83,7 @@ export default function Dashboard({ navigation }) {
               Enviar
             </MainButton>
             <MainButton
-              callback={() => navigation.navigate("solicitud")}
+              callback={() => navigation.navigate("solicitarCobro")}
               style={{ minWidth: "30%", marginHorizontal: 2.5 }}
               width={1}
               fontSize={12}
@@ -90,7 +91,7 @@ export default function Dashboard({ navigation }) {
               Solicitar
             </MainButton>
             <MainButton
-              callback={() => navigation.navigate("garantia")}
+              callback={() => navigation.navigate("solicitud")}
               style={{ minWidth: "30%", marginHorizontal: 2.5 }}
               width={1}
               fontSize={12}
@@ -132,38 +133,7 @@ export default function Dashboard({ navigation }) {
           </ScrollView>
           <View style={styles.historic}>
             <RText style={styles.tituloHistoric}>Últimos Movimientos</RText>
-            {historic ? (
-              <>
-                {historic.map((doc) => {
-                  return (
-                    <View key={doc.date} style={styles.historicDoc}>
-                      <View>
-                        <RText>{doc.tipo}</RText>
-                        <RText tipo={"thin"} style={{ marginTop: 5 }}>
-                          {doc.date.toDate().toDateString()}
-                        </RText>
-                      </View>
-                      <View>
-                        <RText>
-                          {doc.cantidad} {doc.token.toUpperCase()}
-                        </RText>
-                      </View>
-                    </View>
-                  );
-                })}
-              </>
-            ) : (
-              <>
-                <View style={styles.emptyHistoryContainer}>
-                  <RText style={styles.emptyHistory}>
-                    No haz realizado ningun movimiento aún
-                  </RText>
-                  <RText tipo={"thin"} style={{ textAlign: "center" }}>
-                    Envia o recibe tokens y esas operaciones apareceran acá
-                  </RText>
-                </View>
-              </>
-            )}
+            <Historic dash={true} />
           </View>
         </View>
       </ScrollView>

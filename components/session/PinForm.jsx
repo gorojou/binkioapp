@@ -9,15 +9,24 @@ import RText from "../RText";
 import Loader from "../Loader";
 import s from "../styles";
 import useAuth from "../../context/AuthContext";
-export default function PinForm({ navigation }) {
-  const { savePin } = useAuth();
+import { useLocalAuth } from "../../context/LocalAuthentication";
+export default function PinForm({ navigation, route }) {
+  const { savePin, currentUser } = useAuth();
+  const { requireAuth } = useLocalAuth();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const createPin = async () => {
     setErr("");
     if (!form.pass) return setErr("Por favor no dejes ningun campo vacio");
+    if (form.pass === currentUser.pin) return setErr("Pin ya en uso");
     setLoading(true);
     try {
+      if (route.name === "security") {
+        if (!(await requireAuth())) {
+          setLoading(false);
+          return setErr("La autentificacion ha fallado");
+        }
+      }
       await savePin(form.pass);
     } catch (err) {
       setErr(err.message);
@@ -31,13 +40,26 @@ export default function PinForm({ navigation }) {
   return (
     <View style={styles.formulario}>
       <View style={{ width: "90%", alignItems: "center" }}>
-        <RText style={styles.formTitle} tipo={"bold"}>
-          Crea un pin
-        </RText>
-        <RText style={styles.sessionTitle} tipo={"thin"}>
-          Crea un pin de 4 números que te ayudará proteger tus transacciones y
-          el ingreso a la app
-        </RText>
+        {route.name === "security" ? (
+          <>
+            <RText style={styles.formTitle} tipo={"bold"}>
+              Cambia tu pin
+            </RText>
+            <RText style={styles.sessionTitle} tipo={"thin"}>
+              No le muestres tu pin de seguridad a nadie
+            </RText>
+          </>
+        ) : (
+          <>
+            <RText style={styles.formTitle} tipo={"bold"}>
+              Crea un pin
+            </RText>
+            <RText style={styles.sessionTitle} tipo={"thin"}>
+              Crea un pin de 4 números que te ayudará proteger tus transacciones
+              y el ingreso a la app
+            </RText>
+          </>
+        )}
         {err && <RText style={s.errText}>{err}</RText>}
         <KeyboardAvoidingView>
           <View style={styles.intputContainer}>

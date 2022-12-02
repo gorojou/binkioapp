@@ -1,24 +1,17 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
-import RText from "../../RText";
-import MainButton, { SecondaryButton } from "../../buttons";
-import Loader from "../../Loader";
-import useAuth from "../../../context/AuthContext";
-import s from "../../styles";
-import { useLocalAuth } from "../../../context/LocalAuthentication";
-export default function TestMnemonic({
-  mnemonic,
-  setdisplayTest,
-  nombre,
-  wallet,
-}) {
+import RText from "../../../RText";
+import MainButton, { SecondaryButton } from "../../../buttons";
+import Loader from "../../../Loader";
+import useAuth from "../../../../context/AuthContext";
+import s from "../../../styles";
+import { useLocalAuth } from "../../../../context/LocalAuthentication";
+export default function TestMnemonic({ mnemonic, passed }) {
   const [constructedPhrase, setConstructedPhrase] = useState([]);
-  const { requireAuth } = useLocalAuth();
   const [randomPhrase, setRandomPhrase] = useState([]);
   const [correct, setCorrect] = useState(false);
   const [err, setErr] = useState();
   const [loading, setLoading] = useState(false);
-  const { createWallet } = useAuth();
   useEffect(() => {
     setRandomPhrase(shuffle(mnemonic.split(" ")));
   }, []);
@@ -45,16 +38,6 @@ export default function TestMnemonic({
     }
     return array;
   }
-  const saveWallet = async (wallet, name) => {
-    setLoading(true);
-    try {
-      await createWallet(wallet, name);
-    } catch (err) {
-      console.log(err);
-      setLoading(false);
-      setErr(err.message);
-    }
-  };
   return (
     <>
       <RText style={{ ...styles.formTitle, marginBottom: 20 }}>
@@ -78,20 +61,21 @@ export default function TestMnemonic({
       </View>
       <SecondaryButton
         style={{ marginTop: 20 }}
-        width={0.8}
-        callback={() => setdisplayTest(false)}
+        width={1}
+        callback={() => passed(false)}
       >
         Volver a ver la frase
       </SecondaryButton>
-      {correct && (
-        <MainButton
-          style={{ marginTop: 20 }}
-          width={0.8}
-          callback={() => saveWallet(wallet, nombre)}
-        >
-          Guardar Wallet
-        </MainButton>
-      )}
+
+      <MainButton
+        style={{ marginTop: 20 }}
+        width={1}
+        callback={() => passed(true)}
+        blocked={!correct}
+      >
+        Guardar Wallet
+      </MainButton>
+
       {loading && <Loader size={100} />}
     </>
   );

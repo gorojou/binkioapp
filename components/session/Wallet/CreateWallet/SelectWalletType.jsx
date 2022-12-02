@@ -1,77 +1,65 @@
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Image, Alert } from "react-native";
 import React, { useState, useEffect } from "react";
-import RText from "../../RText";
-import Loader from "../../Loader";
-import MainButton from "../../buttons";
-import useAuth from "../../../context/AuthContext";
-import Download from "../../../assets/svg/download.svg";
-import Polyline from "../../../assets/svg/polyline.svg";
-import s from "../../styles";
-export default function SelectWallet({ create }) {
-  const { selectType } = useAuth();
-  const [type, setType] = useState("");
+import RText from "../../../RText";
+import Loader from "../../../Loader";
+import MainButton, { SecondaryButton } from "../../../buttons";
+import useAuth from "../../../../context/AuthContext";
+import BTC from "../../../../assets/svg/btc.svg";
+import ETH from "../../../../assets/svg/eth.svg";
+import firebase, { storage, firestore } from "../../../../firebase";
+import s from "../../../styles";
+import Popup from "../../../Popup";
+import * as ImagePicker from "expo-image-picker";
+import LoaderProgress from "../../../LoaderProgress";
+export default function SelectWalletType({ wallets, setGenerateType }) {
   const [loading, setLoading] = useState(false);
+  const { currentUser, uploadPfp, updateProfile } = useAuth();
   const [err, setErr] = useState("");
-
   return (
     <>
       <View style={styles.formularioContainer}>
         <View style={styles.formulario}>
+          <RText style={styles.formTitle} tipo={"bold"}>
+            Crea una wallet
+          </RText>
           {err && <RText style={s.errText}>{err}</RText>}
+          <RText style={styles.instrucciones} tipo={"thin"}>
+            Selecciona el tipo de wallet que deseas generar
+          </RText>
           <View style={styles.selectionView}>
             <TouchableOpacity
               style={
-                type === "import"
-                  ? styles.optionSelected
-                  : styles.optionNotSelected
+                wallets.btc ? styles.optionSelected : styles.optionNotSelected
               }
-              onPress={() => setType("import")}
+              onPress={() => setGenerateType("btc")}
             >
-              <Download
+              <BTC
                 height={50}
                 width={50}
-                fill={type == "import" ? "#f40038" : "black"}
+                fill={wallets.btc ? "green" : "black"}
               />
-              <RText style={{ color: type === "import" ? "#f40038" : "black" }}>
-                Importar
-              </RText>
             </TouchableOpacity>
             <TouchableOpacity
               style={
-                type === "generate"
-                  ? styles.optionSelected
-                  : styles.optionNotSelected
+                wallets.eth ? styles.optionSelected : styles.optionNotSelected
               }
-              onPress={() => setType("generate")}
+              onPress={() => setGenerateType("eth")}
             >
-              <Polyline
+              <ETH
                 height={50}
                 width={50}
-                fill={type == "generate" ? "#f40038" : "black"}
+                fill={wallets.eth ? "green" : "black"}
               />
-              <RText
-                style={{ color: type == "generate" ? "#f40038" : "black" }}
-              >
-                Generar
-              </RText>
             </TouchableOpacity>
           </View>
-          <MainButton
-            style={{ marginTop: 20 }}
-            width={1}
-            callback={() => create(type)}
-          >
-            Crear Wallet
-          </MainButton>
-          {loading && <Loader size={100} />}
         </View>
       </View>
     </>
   );
 }
+
 const styles = StyleSheet.create({
   formularioContainer: {
-    // flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -100,7 +88,7 @@ const styles = StyleSheet.create({
 
     elevation: 24,
     marginHorizontal: 10,
-    shadowColor: "#f40038",
+    shadowColor: "green",
     backgroundColor: "white",
     justifyContent: "center",
     alignItems: "center",
@@ -121,5 +109,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
+  },
+  instrucciones: {
+    marginVertical: 15,
+    fontSize: 15,
+    textAlign: "center",
+  },
+  popupElementsContianer: {
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

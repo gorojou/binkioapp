@@ -5,15 +5,23 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import React, { useState, useEffect } from "react";
-import RText from "../../RText";
-import Loader from "../../Loader";
-import s from "../../styles";
-import useAuth from "../../../context/AuthContext";
+import RText from "../../../RText";
+import Loader from "../../../Loader";
+import s from "../../../styles";
+import useAuth from "../../../../context/AuthContext";
 import { ethers } from "ethers";
-import CopyToClipboard from "../../CopyToClipboard";
-import { useLocalAuth } from "../../../context/LocalAuthentication";
-export default function ImportWallet({ navigation }) {
-  const { createWallet, updateProfile } = useAuth();
+import * as Bip39 from "bip39";
+import { useBlockChainContext } from "../../../../context/BlockchainContext";
+import CopyToClipboard from "../../../CopyToClipboard";
+import { useLocalAuth } from "../../../../context/LocalAuthentication";
+export default function ImportWallet({
+  confirmWallet,
+  setWallets,
+  setGenerateType,
+  walletType,
+}) {
+  const { getBTCWalletFromMnemonic } = useBlockChainContext();
+  const { uploadWallet, updateProfile } = useAuth();
   const { requireAuth } = useLocalAuth();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
@@ -21,13 +29,23 @@ export default function ImportWallet({ navigation }) {
   const [priv, setPriv] = useState("");
   const [wallet, setWallet] = useState();
   const createNewWallet = async () => {
+    if (!nombre) return setErr("Llena todos los campos");
     setLoading(true);
     try {
-      if (!(await requireAuth())) {
+      if (!confirmWallet && !(await requireAuth())) {
         setLoading(false);
         return setErr("La autentificacion ha fallado");
       }
-      await createWallet(wallet, nombre);
+      if (confirmWallet) {
+        setWallets((prev) => {
+          return {
+            ...prev,
+            [walletType]: { ...wallet, nombre: nombre },
+          };
+        });
+        return setGenerateType(null);
+      }
+      await uploadWallet(wallet, nombre, walletType);
       await updateProfile();
     } catch (err) {
       setErr(err?.message);
@@ -35,22 +53,38 @@ export default function ImportWallet({ navigation }) {
     }
   };
   useEffect(() => {
-    if (!priv) return;
-    if (!nombre) return setErr("Llena todos los campos");
-    setErr("");
-    setLoading(true);
-    try {
-      setWallet({
-        name: nombre,
-        address: ethers.utils.computeAddress(priv),
-        privKey: priv,
-        imported: true,
-      });
-    } catch (err) {
-      setErr("Ingresa una llave privada valida");
-      console.log(err);
-    }
-    setLoading(false);
+    (async () => {
+      if (!priv) return;
+      setErr("");
+      setLoading(true);
+      try {
+        if (walletType === "btc") {
+          if (!Bip39.validateMnemonic(priv))
+            throw { message: "Mnemonic invalido" };
+          const newWallet = await getBTCWalletFromMnemonic(priv);
+          setLoading(false);
+          return setWallet({
+            mnemonic: priv,
+            imported: true,
+            tipo: walletType,
+            ...newWallet,
+          });
+        }
+        setWallet({
+          address: ethers.utils.computeAddress(priv),
+          privateKey: priv,
+          tipo: walletType,
+          imported: true,
+        });
+      } catch (err) {
+        setErr(
+          err.message === "Mnemonic invalido" ||
+            "Ingresa una llave privada valida"
+        );
+        console.log(err);
+      }
+      setLoading(false);
+    })();
   }, [priv]);
   return (
     <View style={styles.formulario}>
@@ -74,7 +108,9 @@ export default function ImportWallet({ navigation }) {
         <View style={styles.intputContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Llave Privada"
+            placeholder={
+              walletType === "btc" ? "Frase mnemonic" : "Llave Privada"
+            }
             value={priv}
             onChangeText={(value) =>
               setPriv((prev) => {

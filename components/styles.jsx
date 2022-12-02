@@ -5,6 +5,10 @@ module.exports = StyleSheet.create({
     flex: 1,
     overflow: "scroll",
   },
+  formulario: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
   button: {
     justifyContent: "center",
     alignItems: "center",
@@ -24,7 +28,12 @@ module.exports = StyleSheet.create({
     padding: 12,
     borderRadius: 15,
   },
-
+  nacimientoInput: {
+    flexDirection: "row",
+  },
+  inputFecha: {
+    marginHorizontal: 3,
+  },
   intputContainer: {
     flexDirection: "row",
     marginVertical: 10,
@@ -35,6 +44,12 @@ module.exports = StyleSheet.create({
     flex: 1,
     padding: 10,
     borderRadius: 20,
+  },
+  sessionTitle: {
+    textAlign: "center",
+  },
+  formTitle: {
+    fontSize: 30,
   },
   errText: {
     color: "red",

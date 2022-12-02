@@ -7,15 +7,18 @@ import {
   Dimensions,
 } from "react-native";
 import React, { useState } from "react";
-import RText from "../RText";
-import Navbar from "./Navbar";
-import useAuth from "../../context/AuthContext";
+import RText from "../../RText";
+import Navbar from "../Navbar";
+import useAuth from "../../../context/AuthContext";
 import * as ImagePicker from "expo-image-picker";
-import MainButton, { SecondaryButton } from "../buttons";
-import firebase, { storage, firestore } from "../../firebase";
-import Loader from "../Loader";
-import PfpImage from "./PfpImage";
-import AccountSettings from "../../assets/svg/accountSettings.svg";
+import MainButton, { SecondaryButton } from "../../buttons";
+import firebase, { storage, firestore } from "../../../firebase";
+import Loader from "../../Loader";
+import PfpImage from "../PfpImage";
+import AccountSettings from "../../../assets/svg/accountSettings.svg";
+import Privacy from "../../../assets/svg/privacyShield.svg";
+import { useNavigation } from "@react-navigation/native";
+import Security from "../../../assets/svg/security.svg";
 export default function Profile({ navigation }) {
   const { currentUser, uploadPfp, updateProfile } = useAuth();
   const [image, setImage] = useState(null);
@@ -70,7 +73,7 @@ export default function Profile({ navigation }) {
                     ? { uri: image }
                     : currentUser.pfp
                     ? { uri: currentUser.pfp }
-                    : require("../../assets/blankpfp.jpg")
+                    : require("../../../assets/blankpfp.jpg")
                 }
                 style={styles.pfpImage}
               />
@@ -128,8 +131,12 @@ export default function Profile({ navigation }) {
               {currentUser.nacimiento.a}
             </RText>
           </View> */}
-          <ProfileTab title={"Datos Importantes"} Svg={AccountSettings} />
-          <ProfileTab title={"Seguridad"} Svg={AccountSettings} />
+          <ProfileTab
+            title={"Datos Importantes"}
+            Svg={Privacy}
+            route={"datosImportantes"}
+          />
+          <ProfileTab title={"Seguridad"} Svg={Security} route={"security"} />
           <ProfileTab title={"Idioma"} Svg={AccountSettings} />
           <ProfileTab title={"Politicas de Privacidad"} Svg={AccountSettings} />
           <ProfileTab title={"Ayuda y soporte"} Svg={AccountSettings} />
@@ -162,13 +169,17 @@ export default function Profile({ navigation }) {
     </>
   );
 }
-const ProfileTab = ({ title, Svg }) => {
+const ProfileTab = ({ title, Svg, route }) => {
+  const navigation = useNavigation();
   return (
     <>
-      <View style={styles.profileTab}>
+      <TouchableOpacity
+        style={styles.profileTab}
+        onPress={() => (route ? navigation.navigate(route) : () => {})}
+      >
         <Svg fill={"#d9d9d9"} />
         <RText style={styles.profileTabTitle}>{title}</RText>
-      </View>
+      </TouchableOpacity>
     </>
   );
 };

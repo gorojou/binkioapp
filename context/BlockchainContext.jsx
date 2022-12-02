@@ -3,18 +3,27 @@ import { ethers } from "ethers";
 import useAuth from "./AuthContext";
 import wbtcAbi from "../utils/wbtcAbi.json";
 import usdtAbi from "../utils/usdtAbi.json";
+import * as Bip32 from "bip32";
+import * as Bip39 from "bip39";
+import * as Random from "expo-random";
+import { bitcoin } from "bitcoinjs-lib/src/networks";
+import * as bitcoinjs from "bitcoinjs-lib";
+import { p2pkh } from "bitcoinjs-lib/src/payments";
+import axios from "axios";
 const BCContext = React.createContext();
 export function useBlockChainContext() {
   return useContext(BCContext);
 }
 function BlockchainContext({ children }) {
   const {
-    currentUser,
-    balance,
-    setBalance,
-    mainWallet,
-    setMainWallet,
-    wallets,
+    mainWalletETH,
+    setMainWalletETH,
+    setWalletsETH,
+    walletsETH,
+    mainWalletBTC,
+    setWalletsBTC,
+    setMainWalletBTC,
+    walletsBTC,
     setBalanceTotal,
     balanceTotal,
     setWallets,
@@ -43,23 +52,65 @@ function BlockchainContext({ children }) {
   const urlProvider = "https://data-seed-prebsc-1-s1.binance.org:8545";
   const [token, setToken] = useState("eth");
 
+  const createContractInstance = async (tokenAddress, tokenAbi) => {
+    return await new ethers.Contract(tokenAddress, tokenAbi, provider);
+  };
+
+  const createRandomWalletBtc = async () => {
+    const phrase = await Bip39.generateMnemonic(128, Random.getRandomBytes);
+    return await getBTCWalletFromMnemonic(await phrase);
+  };
+
+  const getBTCWalletFromMnemonic = async (mnemonic) => {
+    const seed = await Bip39.mnemonicToSeed(mnemonic);
+    const root = await Bip32.fromSeed(seed);
+    const account = await root.derivePath(`m/44'/0'/0'/0`);
+    let node = await account.derive(0).derive(0);
+    let btcAddress = await p2pkh({
+      pubkey: await node.publicKey,
+      network: await bitcoin,
+    }).address;
+    console.log({
+      mnemonic: mnemonic,
+      address: btcAddress,
+      privateKey: node.toWIF(),
+    });
+    console.log(Bip32.from);
+    return {
+      mnemonic: mnemonic,
+      address: btcAddress,
+      privateKey: node.toWIF(),
+    };
+  };
+
+  const createRandomWalletEth = async () => {
+    const wallet = await ethers.Wallet.createRandom();
+    console.log(wallet._mnemonic().phrase);
+    return {
+      mnemonic: wallet._mnemonic().phrase,
+      address: wallet.address,
+      privateKey: wallet._signingKey().privateKey,
+    };
+  };
+
   const checkContractBalance = async (contract, wallet) => {
     return parseFloat(
       ethers.utils.formatEther(await contract.balanceOf(wallet))
     );
   };
-
-  const createContractInstance = async (tokenAddress, tokenAbi) => {
-    return await new ethers.Contract(tokenAddress, tokenAbi, provider);
-  };
-
-  const checkBalance = async (wallet, returns) => {
+  const checkBalance = async (wallet, type) => {
     let balances = {};
+    if (type === "btc") {
+      return {
+        btc: await (
+          await axios.get(`https://blockchain.info/q/addressbalance/${wallet}`)
+        ).data,
+      };
+    }
     await Promise.all(
       Object.keys(balanceTotal).map(async (key) => {
-        if (key === "btc") {
-          balances = { ...balances, [key]: parseFloat(0) };
-        } else if (key === "eth") {
+        if (key === "btc") return;
+        if (key === "eth") {
           const res = parseFloat(
             ethers.utils.formatEther(await provider.getBalance(wallet))
           );
@@ -78,65 +129,69 @@ function BlockchainContext({ children }) {
     return balances;
   };
 
-  const createRandomWallet = async () => {
-    return await ethers.Wallet.createRandom();
+  const getWalletBalance = async (wallets, type) => {
+    let updatedWallets = [];
+    let total = type === "btc" ? { btc: 0 } : { eth: 0, wbtc: 0, usdt: 0 };
+    await Promise.all(
+      wallets.map(async (wallet) => {
+        const walletBalance = await checkBalance(wallet.wallet, type);
+        Object.keys(walletBalance).map((key) => {
+          total = {
+            ...total,
+            [key]: parseFloat(total[key]) + parseFloat(walletBalance[key]),
+          };
+        });
+        if (wallet.main) {
+          if (type === "eth") {
+            setMainWalletETH({
+              ...mainWalletETH,
+              balance: await walletBalance,
+            });
+          } else {
+            setMainWalletBTC({
+              ...mainWalletBTC,
+              balance: await walletBalance,
+            });
+          }
+        }
+        updatedWallets.push({
+          ...wallet,
+          balance: await walletBalance,
+        });
+      })
+    );
+    return [total, await updatedWallets];
   };
 
   useEffect(() => {
     const app = async () => {
-      if (!provider || !wallets || !mainWallet) return;
-      if (wallets[0].balance) return;
-      let updatedWallets = [];
-      let total = { btc: 0, eth: 0, wbtc: 0, usdt: 0 };
-      await Promise.all(
-        wallets.map(async (wallet) => {
-          const walletBalance = await checkBalance(wallet.wallet);
-          Object.keys(walletBalance).map((key) => {
-            total = {
-              ...total,
-              [key]: parseFloat(total[key]) + parseFloat(walletBalance[key]),
-            };
-          });
-          if (wallet.main) {
-            setMainWallet({ ...mainWallet, balance: await walletBalance });
-          }
-          updatedWallets.push({
-            ...wallet,
-            balance: await walletBalance,
-          });
-        })
+      if (
+        !provider ||
+        !walletsETH ||
+        !mainWalletETH ||
+        !walletsBTC ||
+        !mainWalletBTC
+      )
+        return;
+      console.log(walletsETH[0].balance);
+      if (walletsETH[0].balance && walletsBTC[0].balance) return;
+      const [totalETH, updatedWalletsETH] = await getWalletBalance(
+        walletsETH,
+        "eth"
       );
-      setBalanceTotal(total);
-      setWallets(await updatedWallets);
+      const [totalBTC, updatedWalletsBTC] = await getWalletBalance(
+        walletsBTC,
+        "btc"
+      );
+      setBalanceTotal((prev) => {
+        return { ...prev, ...totalETH, ...totalBTC };
+      });
+      setWalletsETH(await updatedWalletsETH);
+      setWalletsBTC(await updatedWalletsBTC);
     };
     app();
-  }, [provider, wallets]);
-  // const addBalances = async () => {
-  //   let res = 0;
-  //   await Promise.all(
-  //     wallets.map(async (wallet) => {
-  //       const balanceNum = await checkBalance(wallet.wallet, null, true);
-  //       res = parseFloat(res) + parseFloat(balanceNum);
-  //       console.log(balanceNum);
-  //     })
-  //   );
-  //   return res ;
-  // };
-  // useEffect(() => {
-  //   const app = async () => {
-  //     if (!provider || token === "btc") return;
-  //     if (
-  //       (currentUser && balance[token] === null) ||
-  //       balance[token] === "Cargando"
-  //     ) {
-  //       setBalanceTotal({
-  //         ...balanceTotal,
-  //         [token]: await addBalances(),
-  //       });
-  //     }
-  //   };
-  //   app();
-  // }, [token, provider]);
+  }, [provider, walletsBTC, walletsETH]);
+
   useEffect(() => {
     const app = async () => {
       if (!provider) {
@@ -148,7 +203,15 @@ function BlockchainContext({ children }) {
   }, []);
 
   return (
-    <BCContext.Provider value={{ createRandomWallet, token, setToken }}>
+    <BCContext.Provider
+      value={{
+        createRandomWalletEth,
+        token,
+        setToken,
+        createRandomWalletBtc,
+        getBTCWalletFromMnemonic,
+      }}
+    >
       {children}
     </BCContext.Provider>
   );
